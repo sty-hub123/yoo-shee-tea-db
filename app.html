@@ -1799,7 +1799,7 @@ window.updateCharts = function() {
   const hasQ=sQ.length>0&&sQ[0][1].qty>0;
 
   Chart.defaults.color=cc.text;
-  const bCfg={barPercentage:.6,categoryPercentage:.8,borderRadius:6,borderSkipped:'bottom',maxBarThickness:40};
+  const bCfg={barPercentage:.85,categoryPercentage:.5,borderRadius:{topLeft:8,topRight:8,bottomLeft:0,bottomRight:0},borderSkipped:false,maxBarThickness:36};
   const bOpts={responsive:true,maintainAspectRatio:false,layout:{padding:{top:10}},scales:{x:{grid:{color:cc.grid},ticks:{color:cc.text}},y:{grace:'30%',grid:{color:cc.grid},ticks:{color:cc.text,maxTicksLimit:6}}},plugins:{legend:{position:'top',labels:{color:cc.text,usePointStyle:true,padding:15}}}};
 
   const makeGrad=(ctx,c1,c2)=>{const g=ctx.createLinearGradient(0,400,0,0);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
