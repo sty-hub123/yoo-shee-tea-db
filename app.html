@@ -1023,7 +1023,7 @@ async function initAuth() {
   showLoading('驗證身份中…');
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
-    window.location.href = 'index.html';
+    window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/index.html';
     return;
   }
   currentUser = session.user;
@@ -1043,7 +1043,7 @@ function updateUserUI(user) {
 
 window.doSignOut = async function() {
   await sb.auth.signOut();
-  window.location.href = 'index.html';
+  window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/index.html';
 };
 
 /* ═══════════════════════════════════════════
