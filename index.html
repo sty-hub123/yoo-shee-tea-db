@@ -119,10 +119,16 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Outfit','Mic
 
 <div class="ripple-overlay" id="ripple-overlay"></div>
 
-<!-- Loading overlay -->
+<!-- Loading overlay with countdown -->
 <div class="loading-overlay" id="loading-overlay">
-  <div class="spinner"></div>
-  <div class="loading-text">驗證身份中…</div>
+  <div class="spinner" id="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">驗證身份中…</div>
+  <div id="countdown-wrap" style="display:none;flex-direction:column;align-items:center;gap:12px">
+    <div style="width:72px;height:72px;border-radius:50%;background:rgba(37,99,235,0.1);border:2.5px solid rgba(37,99,235,0.25);display:flex;align-items:center;justify-content:center">
+      <span id="countdown-num" style="font-family:Urbanist,sans-serif;font-size:32px;font-weight:900;color:#2563eb">3</span>
+    </div>
+    <div style="font-family:Urbanist,sans-serif;font-size:13px;color:rgba(37,99,235,0.6);font-weight:500;letter-spacing:0.5px">秒後自動進入系統…</div>
+  </div>
 </div>
 
 <div class="bg">
@@ -195,28 +201,61 @@ var SUPABASE_ANON_KEY = 'sb_publishable_JsnZRdnJSWPTu8_uAQtksA_ldGpXT0W';
 var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ══════════════════════════════════════
-   AUTH STATE — check on page load
-   If already logged in → go straight to app
+   AUTH — robust redirect with countdown
 ══════════════════════════════════════ */
+var APP_URL = 'https://sty-hub123.github.io/yoo-shee-tea-db/app.html';
+var redirecting = false;
+
+function startCountdown() {
+  if (redirecting) return;
+  redirecting = true;
+
+  /* Show success state in loading overlay */
+  document.getElementById('loading-spinner').style.display = 'none';
+  document.getElementById('loading-text').textContent = '登入成功！';
+  document.getElementById('loading-text').style.color = '#059669';
+  document.getElementById('loading-text').style.fontSize = '18px';
+  document.getElementById('loading-text').style.fontWeight = '800';
+
+  var wrap = document.getElementById('countdown-wrap');
+  wrap.style.display = 'flex';
+
+  document.getElementById('loading-overlay').classList.add('show');
+
+  var n = 3;
+  var el = document.getElementById('countdown-num');
+  el.textContent = n;
+
+  var timer = setInterval(function() {
+    n--;
+    el.textContent = n;
+    /* Pulse animation */
+    el.style.transform = 'scale(1.3)';
+    el.style.transition = 'transform 0.15s ease';
+    setTimeout(function() { el.style.transform = 'scale(1)'; }, 150);
+
+    if (n <= 0) {
+      clearInterval(timer);
+      window.location.href = APP_URL;
+    }
+  }, 1000);
+}
+
+/* Listen for auth state changes (handles OAuth redirect callback) */
 supabase.auth.onAuthStateChange(function(event, session) {
   if (event === 'SIGNED_IN' && session) {
-    showLoading();
-    setTimeout(function() {
-      window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/app.html';
-    }, 800);
+    startCountdown();
   }
   if (event === 'SIGNED_OUT') {
+    redirecting = false;
     hideLoading();
   }
 });
 
-/* Check if already logged in on load */
+/* Also check on page load (handles already-logged-in case) */
 supabase.auth.getSession().then(function(result) {
   if (result.data.session) {
-    showLoading();
-    setTimeout(function() {
-      window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/app.html';
-    }, 600);
+    startCountdown();
   }
 });
 
