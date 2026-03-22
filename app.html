@@ -660,10 +660,29 @@ body {
   box-shadow: inset 0 3px 8px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.05);
   position: relative; margin: 0 auto;
 }
-.apple-ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
-.ring-bg { fill: none; stroke: var(--ring-track); stroke-width: 13; }
-.ring-path { fill: none; stroke-width: 13; stroke-linecap: round; transition: stroke-dashoffset 0.8s var(--ease-bounce); }
-.ring-head-group { transition: transform 0.8s var(--ease-bounce), opacity 0.3s; }
+/* Canvas ring — drawn via JS, dot technique from codepen */
+.ring-canvas-wrap {
+  position: relative; width: 110px; height: 110px;
+  border-radius: 50%; background: #18181b;
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.5);
+  margin: 0 auto;
+}
+.ring-canvas-wrap canvas { position: absolute; top: 0; left: 0; }
+.ring-dot-cap {
+  position: absolute; width: 100%; height: 100%;
+  border-radius: 50%;
+  transition: transform 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  transform-origin: center center;
+}
+.ring-dot-cap::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: -5.5px;
+  width: 11px; height: 11px;
+  margin-left: -5.5px;
+  border-radius: 50%;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.6);
+}
 .ring-text-content {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -740,11 +759,43 @@ body {
 .wf-growth-pct { font-size: 38px; font-weight: 900; line-height: 1; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
 .wf-growth-diff { font-size: 14px; font-weight: 700; }
 
-.wf-achieve-box { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.wf-achieve-lbl { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; }
+.wf-achieve-box { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
+.wf-achieve-lbl { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; }
 .wf-achieve-pct { font-size: 52px; font-weight: 900; color: var(--up); line-height: 1; margin-bottom: 20px; }
 .wf-progress-container { width: 80%; max-width: 300px; height: 14px; background: var(--chart-grid); border-radius: 8px; overflow: hidden; }
 .progress-fill { height: 100%; transition: width 0.8s var(--ease-bounce); border-radius: 8px; }
+/* Achievement ring */
+.achieve-ring-wrap {
+  position: relative; width: 160px; height: 160px;
+  border-radius: 50%; background: #18181b;
+  box-shadow: inset 0 4px 12px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.08);
+  margin: 0 auto;
+}
+.achieve-ring-wrap canvas { position: absolute; top: 0; left: 0; }
+.achieve-ring-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.achieve-ring-pct { font-size: 32px; font-weight: 900; color: #ffffff; line-height: 1; margin-bottom: 4px; font-family: 'Urbanist', sans-serif; }
+.achieve-ring-lbl { font-size: 11px; color: #94a3b8; font-weight: 600; font-family: 'Urbanist', sans-serif; }
+/* Dot cap for ring */
+.achieve-ring-dot-wrap {
+  position: absolute; width: 100%; height: 100%;
+  border-radius: 50%; top: 0; left: 0;
+  transition: transform 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  transform-origin: center center;
+}
+.achieve-ring-dot-wrap::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: -7px;
+  width: 14px; height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.5);
+}
 
 /* Charts */
 .charts-container { margin-top: 16px; }
@@ -1553,35 +1604,29 @@ function createSectionSideHTML(sIdx, proj) {
       <div class="sk-body">
         <div class="sk-box" style="background:transparent;border:none;padding:0;gap:8px">
           <div class="sk-data-title" style="margin-bottom:0">${proj.ty}營收達成率</div>
-          ${buildRingSVG(sIdx,'rev',gR,'var(--ring-rev-start)','var(--ring-rev-end)')}
+          ${buildRingSVG(sIdx,'rev')}
         </div>
         <div class="sk-box" style="background:transparent;border:none;padding:0;gap:8px">
           <div class="sk-data-title" style="margin-bottom:0">${proj.ty}銷量達成率</div>
-          ${buildRingSVG(sIdx,'vol',gV,'var(--ring-vol-start)','var(--ring-vol-end)')}
+          ${buildRingSVG(sIdx,'vol')}
         </div>
       </div>
     </div>`;
 }
 
-function buildRingSVG(sIdx, type, gradId, c1, c2) {
-  const r=50,cx=60,cy=60,c=2*Math.PI*r;
+/* Ring colour map — used by buildRingSVG and updateRing */
+var RING_COLORS = {
+  rev: { start: '#34d399', end: '#047857', dot: '#047857' },
+  vol: { start: '#fcd34d', end: '#b45309', dot: '#b45309' }
+};
+
+function buildRingSVG(sIdx, type) {
+  var col = RING_COLORS[type];
   return `
-    <div class="apple-ring-wrapper">
-      <svg class="apple-ring-svg" viewBox="0 0 120 120">
-        <defs>
-          <linearGradient id="${gradId}" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="${c1}"/>
-            <stop offset="100%" stop-color="${c2}"/>
-          </linearGradient>
-          <filter id="sh-${gradId}"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.8)"/></filter>
-        </defs>
-        <circle cx="${cx}" cy="${cy}" r="${r}" class="ring-bg"/>
-        <circle id="ring-${type}-lap1-${sIdx}" cx="${cx}" cy="${cy}" r="${r}" class="ring-path" stroke="url(#${gradId})" stroke-dasharray="${c}" stroke-dashoffset="${c}"/>
-        <circle id="ring-${type}-lap2-${sIdx}" cx="${cx}" cy="${cy}" r="${r}" class="ring-path" stroke="url(#${gradId})" stroke-dasharray="${c}" stroke-dashoffset="${c}" style="opacity:0"/>
-        <g id="ring-${type}-head-${sIdx}" class="ring-head-group" style="transform-origin:${cx}px ${cy}px;opacity:0;transform:rotate(0deg)">
-          <circle cx="110" cy="60" r="6.5" fill="${c2}" filter="url(#sh-${gradId})"/>
-        </g>
-      </svg>
+    <div class="ring-canvas-wrap" id="ring-wrap-${type}-${sIdx}">
+      <canvas id="ring-canvas-${type}-${sIdx}" width="110" height="110"></canvas>
+      <div class="ring-dot-cap" id="ring-dot-${type}-${sIdx}" style="transform:rotate(0deg)">
+      </div>
       <div class="ring-text-content">
         <span id="ring-${type}-val-${sIdx}" class="sk-circle-val">0%</span>
         <span class="sk-circle-lbl">達成率</span>
@@ -1614,25 +1659,150 @@ function updateSectionDOM(sIdx, k) {
   updateRing(sIdx,'vol',k.volAchieve);
 }
 
-/* ── Tech Debt Fix #1: Apple Ring 模數計算，支援 200%+ ── */
+/* ── Apple Ring — canvas + rotating dot cap technique ──
+   Inspired by codepen dot approach: dot element rotates
+   alongside the arc, giving precise head/tail positioning.
+   Canvas draws track + gradient arc. ── */
 function updateRing(sIdx, type, pct) {
-  const c = 2 * Math.PI * 50;
-  /* 用模數計算：每圈最多 100%，超過就畫第二圈 */
-  const lap1Pct = Math.min(pct, 100);
-  const lap2Pct = pct > 100 ? Math.min(pct - 100, 100) : 0;
-  const $= (id,fn)=>{const e=document.getElementById(id);if(e)fn(e);};
-  $(`ring-${type}-val-${sIdx}`, e=>e.innerText=pct+'%');
-  $(`ring-${type}-lap1-${sIdx}`, e=>e.style.strokeDashoffset= c-(lap1Pct/100)*c);
-  $(`ring-${type}-lap2-${sIdx}`, e=>{
-    e.style.strokeDashoffset = c-(lap2Pct/100)*c;
-    e.style.opacity = pct>100 ? '1' : '0';
-  });
-  $(`ring-${type}-head-${sIdx}`, e=>{
-    /* 角度以第二圈為主（超過100%時），否則以第一圈 */
-    const deg = pct > 100 ? ((pct-100)/100)*360 : (pct/100)*360;
-    e.style.transform = `rotate(${deg}deg)`;
-    e.style.opacity = pct>100 ? '1' : '0';
-  });
+  var valEl = document.getElementById('ring-'+type+'-val-'+sIdx);
+  if (valEl) valEl.innerText = pct + '%';
+
+  var canvas = document.getElementById('ring-canvas-'+type+'-'+sIdx);
+  if (!canvas) return;
+  var ctx2 = canvas.getContext('2d');
+  var dpr2 = window.devicePixelRatio || 1;
+  var size = 110;
+
+  /* Resize for retina */
+  if (canvas.width !== size * dpr2) {
+    canvas.width  = size * dpr2;
+    canvas.height = size * dpr2;
+    canvas.style.width  = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx2.scale(dpr2, dpr2);
+  }
+
+  ctx2.clearRect(0, 0, size, size);
+
+  var cx2 = size / 2, cy2 = size / 2;
+  var r2  = 42, sw = 13;
+  var startAngle = -Math.PI / 2; /* 12 o'clock */
+
+  /* Track */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2, r2, 0, 2 * Math.PI);
+  ctx2.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx2.lineWidth = sw;
+  ctx2.stroke();
+
+  if (pct <= 0) return;
+
+  var col  = RING_COLORS[type];
+  var draw = Math.min(pct, 200) / 100; /* up to 2 full laps */
+  var endAngle = startAngle + draw * 2 * Math.PI;
+
+  /* Gradient: create along the arc direction */
+  var grad2 = ctx2.createLinearGradient(cx2, cy2 - r2, cx2, cy2 + r2);
+  grad2.addColorStop(0, col.start);
+  grad2.addColorStop(1, col.end);
+
+  /* Draw start cap (round) */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2 - r2, sw/2 - 1, 0, 2*Math.PI);
+  ctx2.fillStyle = col.start;
+  ctx2.fill();
+
+  /* Draw arc */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2, r2, startAngle, endAngle);
+  ctx2.strokeStyle = grad2;
+  ctx2.lineWidth = sw;
+  ctx2.lineCap = 'butt';
+  ctx2.stroke();
+
+  /* Dot cap — rotating div handles the end cap */
+  var dot = document.getElementById('ring-dot-'+type+'-'+sIdx);
+  if (dot) {
+    var deg = (pct / 100) * 360;
+    dot.style.transform = 'rotate(' + deg + 'deg)';
+    dot.style.setProperty('--dot-color', col.dot);
+    /* Set dot ::after color via inline style trick */
+    if (!dot._styleSet) {
+      dot._styleSet = true;
+      dot.style.cssText += '; --dot-color: ' + col.dot;
+      /* Inject style for this specific dot */
+      var styleId = 'dot-style-'+type+'-'+sIdx;
+      if (!document.getElementById(styleId)) {
+        var s = document.createElement('style');
+        s.id = styleId;
+        s.textContent = '#ring-dot-'+type+'-'+sIdx+'::after { background: '+col.dot+' !important; }';
+        document.head.appendChild(s);
+      }
+    }
+  }
+}
+
+/* Achievement ring (bottom executive card) */
+function drawAchieveRing(pct) {
+  var canvas = document.getElementById('tot-achieve-canvas');
+  if (!canvas) return;
+  var ctx2 = canvas.getContext('2d');
+  var dpr2 = window.devicePixelRatio || 1;
+  var size = 160;
+
+  if (canvas.width !== size * dpr2) {
+    canvas.width  = size * dpr2;
+    canvas.height = size * dpr2;
+    canvas.style.width  = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx2.scale(dpr2, dpr2);
+  }
+
+  ctx2.clearRect(0, 0, size, size);
+  var cx2 = size/2, cy2 = size/2, r2 = 62, sw = 16;
+  var startAngle = -Math.PI / 2;
+
+  /* Track */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2, r2, 0, 2*Math.PI);
+  ctx2.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx2.lineWidth = sw;
+  ctx2.stroke();
+
+  if (pct <= 0) return;
+
+  var draw = Math.min(pct, 200) / 100;
+  var endAngle = startAngle + draw * 2 * Math.PI;
+
+  var g = ctx2.createLinearGradient(cx2, cy2-r2, cx2, cy2+r2);
+  g.addColorStop(0, '#6ee7b7');
+  g.addColorStop(1, '#059669');
+
+  /* Start cap */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2-r2, sw/2-1, 0, 2*Math.PI);
+  ctx2.fillStyle = '#6ee7b7';
+  ctx2.fill();
+
+  /* Arc */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2, r2, startAngle, endAngle);
+  ctx2.strokeStyle = g;
+  ctx2.lineWidth = sw;
+  ctx2.lineCap = 'butt';
+  ctx2.stroke();
+
+  /* Dot cap */
+  var dot = document.getElementById('tot-achieve-dot');
+  if (dot) {
+    dot.style.transform = 'rotate('+(pct*3.6)+'deg)';
+    if (!dot._styleSet) {
+      dot._styleSet = true;
+      var s = document.createElement('style');
+      s.textContent = '#tot-achieve-dot::after { background: #059669 !important; width:16px; height:16px; margin-left:-8px; top:-8px; }';
+      document.head.appendChild(s);
+    }
+  }
 }
 
 /* ── Tech Debt Fix #2: initTotalBoard 分離 DOM 存在與資料更新 ── */
@@ -1645,9 +1815,9 @@ function initTotalBoardHTML() {
     <div class="wf-card hover-lift">
       <div class="wf-card-header"><i class="fas fa-sack-dollar" style="color:var(--primary)"></i> 營收成長對比</div>
       <div class="wf-top-row">
-        <div class="wf-stat"><div class="wf-stat-label">LY 總實際營收</div><div class="wf-stat-val-ly" id="tot-ly-rev-val">$0</div></div>
+        <div class="wf-stat"><div class="wf-stat-label" id="tot-ly-stat-lbl">LY 總實際營收</div><div class="wf-stat-val-ly" id="tot-ly-rev-val">$0</div></div>
         <div class="wf-divider"></div>
-        <div class="wf-stat"><div class="wf-stat-label">TY 總實際營收</div><div class="wf-stat-val" id="tot-ty-rev-val">$0</div></div>
+        <div class="wf-stat"><div class="wf-stat-label" id="tot-ty-stat-lbl">TY 總實際營收</div><div class="wf-stat-val" id="tot-ty-rev-val">$0</div></div>
       </div>
       <div class="wf-bottom-row">
         <div class="wf-mini-chart-box">
@@ -1660,14 +1830,14 @@ function initTotalBoardHTML() {
                   <span class="wf-mc-bar-value" id="tot-ly-bar-val">0k</span>
                   <div class="wf-bar ly"></div>
                 </div>
-                <span class="wf-mc-lbl">LY</span>
+                <span class="wf-mc-lbl" id="tot-ly-lbl">LY</span>
               </div>
               <div class="wf-mc-bar-col">
                 <div class="wf-mc-bar-wrapper" id="tot-ty-bar-wrap" style="height:0%">
                   <span class="wf-mc-bar-value" id="tot-ty-bar-val">0k</span>
                   <div class="wf-bar ty"></div>
                 </div>
-                <span class="wf-mc-lbl">TY</span>
+                <span class="wf-mc-lbl" id="tot-ty-lbl">TY</span>
               </div>
             </div>
           </div>
@@ -1689,12 +1859,15 @@ function initTotalBoardHTML() {
         <div class="wf-divider"></div>
         <div class="wf-stat"><div class="wf-stat-label">TY 總實際營收</div><div class="wf-stat-val" id="tot-act-rev-val">$0</div></div>
       </div>
-      <div class="wf-bottom-row" style="align-items:center;justify-content:center">
+      <div class="wf-bottom-row" style="align-items:center;justify-content:center;padding:8px 0">
         <div class="wf-achieve-box">
-          <div class="wf-achieve-lbl">達成率</div>
-          <div class="wf-achieve-pct" id="tot-achieve-txt">0%</div>
-          <div class="wf-progress-container">
-            <div id="tot-achieve-bar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#6ee7b7,#10b981)"></div>
+          <div class="achieve-ring-wrap">
+            <canvas id="tot-achieve-canvas" width="160" height="160"></canvas>
+            <div class="achieve-ring-dot-wrap" id="tot-achieve-dot"></div>
+            <div class="achieve-ring-text">
+              <div class="achieve-ring-pct" id="tot-achieve-txt">0%</div>
+              <div class="achieve-ring-lbl">達成率</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1724,8 +1897,16 @@ function updateTotalDOM(proj) {
   $('tot-rev-diff', e=>{e.innerText=fmtDiffMoney(diff);e.className=`wf-growth-diff ${gr>=0?'trend-text-up':'trend-text-down'}`;});
   $('tot-plan-rev-val', e=>e.innerText=fmtMoney(planRev));
   $('tot-act-rev-val', e=>e.innerText=fmtMoney(actRev));
-  $('tot-achieve-txt', e=>{e.innerText=ach+'%';e.className=`wf-achieve-pct ${ach>=100?'trend-text-up':''}`;});
-  $('tot-achieve-bar', e=>e.style.width=Math.min(ach,100)+'%');
+  $('tot-achieve-txt', e=>{e.innerText=ach+'%';e.style.color=ach>=100?'var(--down)':'var(--up)';});
+  /* Draw achievement ring */
+  drawAchieveRing(ach);
+  /* Update LY/TY labels to actual years */
+  var lyYear = proj.ly || 'LY';
+  var tyYear = proj.ty || 'TY';
+  $('tot-ly-lbl',      e=>e.textContent=lyYear);
+  $('tot-ty-lbl',      e=>e.textContent=tyYear);
+  $('tot-ly-stat-lbl', e=>e.textContent=lyYear+' 總實際營收');
+  $('tot-ty-stat-lbl', e=>e.textContent=tyYear+' 總實際營收');
 }
 
 /* ── Tech Debt Fix #3: Hub 增量更新（避免全量重繪） ── */
@@ -1799,7 +1980,7 @@ window.updateCharts = function() {
   const hasQ=sQ.length>0&&sQ[0][1].qty>0;
 
   Chart.defaults.color=cc.text;
-  const bCfg={barPercentage:.85,categoryPercentage:.5,borderRadius:{topLeft:8,topRight:8,bottomLeft:0,bottomRight:0},borderSkipped:false,maxBarThickness:36};
+  const bCfg={barPercentage:.9,categoryPercentage:.45,borderRadius:8,borderSkipped:'bottom',maxBarThickness:32};
   const bOpts={responsive:true,maintainAspectRatio:false,layout:{padding:{top:10}},scales:{x:{grid:{color:cc.grid},ticks:{color:cc.text}},y:{grace:'30%',grid:{color:cc.grid},ticks:{color:cc.text,maxTicksLimit:6}}},plugins:{legend:{position:'top',labels:{color:cc.text,usePointStyle:true,padding:15}}}};
 
   const makeGrad=(ctx,c1,c2)=>{const g=ctx.createLinearGradient(0,400,0,0);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
