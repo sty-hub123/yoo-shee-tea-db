@@ -202,7 +202,7 @@ supabase.auth.onAuthStateChange(function(event, session) {
   if (event === 'SIGNED_IN' && session) {
     showLoading();
     setTimeout(function() {
-      window.location.href = 'app.html';
+      window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/app.html';
     }, 800);
   }
   if (event === 'SIGNED_OUT') {
@@ -215,7 +215,7 @@ supabase.auth.getSession().then(function(result) {
   if (result.data.session) {
     showLoading();
     setTimeout(function() {
-      window.location.href = 'app.html';
+      window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/app.html';
     }, 600);
   }
 });
