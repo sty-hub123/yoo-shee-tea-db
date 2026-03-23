@@ -1285,26 +1285,15 @@ document.getElementById('btn-google').addEventListener('click', async function()
 /* ═══════════════════════════════════════════
    SUPABASE INIT
 ═══════════════════════════════════════════ */
-const SUPABASE_URL = 'https://sbhogbwaqzjlhqbckwef.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_JsnZRdnJSWPTu8_uAQtksA_ldGpXT0W';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    storage: window.localStorage,
-    storageKey: 'yoosheetea-auth',
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-});
-
-let currentUser = null;
+// sb already declared above — shared Supabase client
+var currentUser = null;
 
 /* ── Auth Guard ── */
 async function initAuth() {
   showLoading('驗證身份中…');
   try {
     const { data } = await sb.auth.getSession();
-    const session = data && data.session;
+    var session = data && data.session;
     if (!session) {
       hideLoading();
       showLoginView();
@@ -1333,9 +1322,9 @@ function showLoginView() {
 }
 
 function updateUserUI(user) {
-  const name = user.user_metadata?.full_name || user.email.split('@')[0];
-  const email = user.email;
-  const initial = name.charAt(0).toUpperCase();
+  var name = user.user_metadata?.full_name || user.email.split('@')[0];
+  var email = user.email;
+  var initial = name.charAt(0).toUpperCase();
   document.getElementById('user-avatar').textContent = initial;
   document.getElementById('user-name').textContent = name;
   document.getElementById('user-email').textContent = email;
@@ -1352,10 +1341,10 @@ window.doSignOut = async function() {
 /* ═══════════════════════════════════════════
    TOAST
 ═══════════════════════════════════════════ */
-let toastTimer = null;
+var toastTimer = null;
 function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  const icon = document.getElementById('toast-icon');
+  var t = document.getElementById('toast');
+  var icon = document.getElementById('toast-icon');
   document.getElementById('toast-msg').textContent = msg;
   icon.className = `toast-icon ${type}`;
   icon.innerHTML = type === 'success' ? '<i class="fas fa-check"></i>' : type === 'error' ? '<i class="fas fa-times"></i>' : '<i class="fas fa-cloud-upload-alt"></i>';
@@ -1380,8 +1369,8 @@ function hideLoading() {
    所有 save/load 都走 Supabase
    本機保留 fallback 快取
 ═══════════════════════════════════════════ */
-let projects = [];
-let masterTags = [];
+var projects = [];
+var masterTags = [];
 
 async function loadAllData() {
   try {
@@ -1449,7 +1438,7 @@ async function loadAllData() {
 }
 
 /* Save all projects to Supabase (upsert per project id) */
-let saveDebounceTimer = null;
+var saveDebounceTimer = null;
 function saveProjects() {
   /* Optimistic local update */
   localStorage.setItem('yuxitang_projects_v49', JSON.stringify(projects));
@@ -1462,7 +1451,7 @@ async function saveProjectsToCloud() {
   if (!currentUser) return;
   try {
     /* Upsert each project as a row: { id, user_id, data } */
-    const rows = projects.map(p => ({
+    var rows = projects.map(p => ({
       id: p.id,
       user_id: currentUser.id,
       data: p,
@@ -1497,9 +1486,9 @@ async function saveTags() {
 /* ═══════════════════════════════════════════
    APP LOGIC (V49 原有邏輯，完整保留)
 ═══════════════════════════════════════════ */
-const SECTION_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#0ea5e9','#84cc16','#eab308','#d946ef','#14b8a6','#6366f1','#ec4899','#f97316','#06b6d4','#64748b'];
+var SECTION_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#0ea5e9','#84cc16','#eab308','#d946ef','#14b8a6','#6366f1','#ec4899','#f97316','#06b6d4','#64748b'];
 
-let appState = { view: 'hub', currentProjectId: null };
+var appState = { view: 'hub', currentProjectId: null };
 
 function generateId() { return 'PRJ-' + Math.random().toString(36).substr(2, 5).toUpperCase(); }
 
@@ -1517,15 +1506,15 @@ function createDefaultProject(title, ly, ty, tags = []) {
 
 document.getElementById('current-date').innerText = new Date().toLocaleDateString();
 
-const fmtMoney = n => '$' + n.toLocaleString();
-const fmtK = n => n > 0 ? (n/1000).toFixed(0) + 'k' : '0';
-const fmtPct = n => (n > 0 ? '+' : '') + n.toFixed(1) + '%';
-const fmtDiffMoney = n => (n >= 0 ? '+' : '-') + '$' + Math.abs(n).toLocaleString();
-const fmtDiffQty = n => (n >= 0 ? '+' : '-') + Math.abs(n).toLocaleString() + ' 盒';
+var fmtMoney = n => '$' + n.toLocaleString();
+var fmtK = n => n > 0 ? (n/1000).toFixed(0) + 'k' : '0';
+var fmtPct = n => (n > 0 ? '+' : '') + n.toFixed(1) + '%';
+var fmtDiffMoney = n => (n >= 0 ? '+' : '-') + '$' + Math.abs(n).toLocaleString();
+var fmtDiffQty = n => (n >= 0 ? '+' : '-') + Math.abs(n).toLocaleString() + ' 盒';
 function formatValue(val) { return val ? Number(val).toLocaleString() : ''; }
 
 /* Theme */
-let isDarkMode = localStorage.getItem('yuxitang_theme') === 'dark';
+var isDarkMode = localStorage.getItem('yuxitang_theme') === 'dark';
 if (isDarkMode) document.documentElement.setAttribute('data-theme', 'dark');
 
 function updateThemeBtnText() {
@@ -1569,14 +1558,14 @@ window.openProject = function(id) {
 };
 
 window.createNewProject = function() {
-  let year = new Date().getFullYear();
-  let np = createDefaultProject(`新檔期 ${year}`, (year-1).toString(), year.toString());
+  var year = new Date().getFullYear();
+  var np = createDefaultProject(`新檔期 ${year}`, (year-1).toString(), year.toString());
   projects.unshift(np); saveProjects(); openProject(np.id);
 };
 
 window.duplicateProject = function(id) {
-  let src = projects.find(p => p.id === id); if (!src) return;
-  let np = JSON.parse(JSON.stringify(src));
+  var src = projects.find(p => p.id === id); if (!src) return;
+  var np = JSON.parse(JSON.stringify(src));
   np.id = Date.now().toString(); np.shortId = generateId();
   np.title = '複製 - ' + np.title;
   np.sections.forEach(s => {
@@ -1605,19 +1594,19 @@ window.deleteCurrentProject = async function() {
 };
 
 window.exportAllData = function() {
-  const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ projects, masterTags }));
-  const a = document.createElement('a');
+  var str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ projects, masterTags }));
+  var a = document.createElement('a');
   a.setAttribute('href', str);
   a.setAttribute('download', `yoosheetea_backup_${new Date().toISOString().slice(0,10)}.json`);
   document.body.appendChild(a); a.click(); a.remove();
 };
 
 window.importData = function(event) {
-  const file = event.target.files[0]; if (!file) return;
-  const reader = new FileReader();
+  var file = event.target.files[0]; if (!file) return;
+  var reader = new FileReader();
   reader.onload = async function(e) {
     try {
-      const imp = JSON.parse(e.target.result);
+      var imp = JSON.parse(e.target.result);
       if (imp.projects && Array.isArray(imp.projects)) {
         projects = imp.projects;
         if (imp.masterTags) masterTags = imp.masterTags;
@@ -1642,21 +1631,21 @@ window.clearAllData = async function() {
 window.openTagManager = function() { document.getElementById('modal-tag-manager').style.display = 'flex'; renderTagPool(); };
 window.closeTagManager = function() { document.getElementById('modal-tag-manager').style.display = 'none'; renderHubFilters(); renderHub(); if (appState.view === 'detail') renderDetail(); };
 function renderTagPool() { document.getElementById('tag-pool-list').innerHTML = masterTags.map((t,i) => `<div class="tag-item-edit">${t} <i class="fas fa-times" onclick="window.removeMasterTag(${i})"></i></div>`).join(''); }
-window.addNewTag = function() { const v = document.getElementById('new-tag-input').value.trim(); if (v && !masterTags.includes(v)) { masterTags.push(v); saveTags(); renderTagPool(); document.getElementById('new-tag-input').value = ''; } };
-window.removeMasterTag = function(idx) { const tn = masterTags[idx]; masterTags.splice(idx,1); saveTags(); projects.forEach(p => { p.tags = p.tags.filter(t => t !== tn); }); saveProjects(); renderTagPool(); };
+window.addNewTag = function() { var v = document.getElementById('new-tag-input').value.trim(); if (v && !masterTags.includes(v)) { masterTags.push(v); saveTags(); renderTagPool(); document.getElementById('new-tag-input').value = ''; } };
+window.removeMasterTag = function(idx) { var tn = masterTags[idx]; masterTags.splice(idx,1); saveTags(); projects.forEach(p => { p.tags = p.tags.filter(t => t !== tn); }); saveProjects(); renderTagPool(); };
 
 function renderHubFilters() {
-  const years = [...new Set(projects.map(p => p.ty))].sort().reverse();
+  var years = [...new Set(projects.map(p => p.ty))].sort().reverse();
   document.getElementById('filter-year').innerHTML = `<option value="">所有年份</option>` + years.map(y => `<option value="${y}">${y} 年</option>`).join('');
   document.getElementById('filter-tag').innerHTML = `<option value="">所有標籤</option>` + masterTags.map(t => `<option value="${t}">${t}</option>`).join('');
 }
 
 window.renderHub = function() {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  const fy = document.getElementById('filter-year').value;
-  const ft = document.getElementById('filter-tag').value;
+  var q = document.getElementById('search-input').value.toLowerCase();
+  var fy = document.getElementById('filter-year').value;
+  var ft = document.getElementById('filter-tag').value;
 
-  const grid = document.getElementById('project-grid');
+  var grid = document.getElementById('project-grid');
   grid.innerHTML = `
     <div class="project-card-hub add-new-card" onclick="window.createNewProject()">
       <i class="fas fa-plus-circle" style="font-size:32px;color:var(--primary);margin-bottom:8px"></i>
@@ -1665,21 +1654,21 @@ window.renderHub = function() {
 
   projects
     .filter(p => {
-      const ms = p.title.toLowerCase().includes(q) || p.shortId.toLowerCase().includes(q);
-      const my = fy === '' || p.ty === fy;
-      const mt = ft === '' || p.tags.includes(ft);
+      var ms = p.title.toLowerCase().includes(q) || p.shortId.toLowerCase().includes(q);
+      var my = fy === '' || p.ty === fy;
+      var mt = ft === '' || p.tags.includes(ft);
       return ms && my && mt;
     })
     .forEach(proj => {
-      let lyRev = 0, tyRev = 0;
+      var lyRev = 0, tyRev = 0;
       proj.sections.forEach(s => {
         s.lyItems.forEach(i => lyRev += (i.revenue||0));
         s.tyItems.forEach(i => tyRev += (i.aRev||0));
       });
-      const growth = lyRev > 0 ? ((tyRev - lyRev) / lyRev) * 100 : 0;
-      const tClass = growth >= 0 ? 'trend-text-up' : 'trend-text-down';
-      const tIcon = growth >= 0 ? '↗' : '↘';
-      const tags = proj.tags.map(t => `<span class="badge-tag">${t}</span>`).join('');
+      var growth = lyRev > 0 ? ((tyRev - lyRev) / lyRev) * 100 : 0;
+      var tClass = growth >= 0 ? 'trend-text-up' : 'trend-text-down';
+      var tIcon = growth >= 0 ? '↗' : '↘';
+      var tags = proj.tags.map(t => `<span class="badge-tag">${t}</span>`).join('');
 
       grid.innerHTML += `
         <div class="project-card-hub" onclick="window.openProject('${proj.id}')">
@@ -1695,10 +1684,10 @@ window.renderHub = function() {
     });
 };
 
-let dragSrcEl = null;
+var dragSrcEl = null;
 
 window.renderDetail = function() {
-  const proj = projects.find(p => p.id === appState.currentProjectId);
+  var proj = projects.find(p => p.id === appState.currentProjectId);
   if (!proj) return;
 
   document.getElementById('campaign-title-input').value = proj.title;
@@ -1707,16 +1696,16 @@ window.renderDetail = function() {
   document.getElementById('year-ty').value = proj.ty;
   document.getElementById('project-memo-input').value = proj.memo || '';
 
-  const tagsContainer = document.getElementById('project-tags-container');
+  var tagsContainer = document.getElementById('project-tags-container');
   tagsContainer.innerHTML = `<span style="font-size:12px;font-weight:700;color:var(--up);margin-right:5px"><i class="fas fa-asterisk"></i> 標籤：</span>` +
     masterTags.map(t => `<span class="badge-tag ${proj.tags.includes(t) ? 'active' : ''}" style="cursor:pointer" onclick="window.toggleProjectTag('${t}')">${t}</span>`).join('');
 
-  const container = document.getElementById('sections-container');
+  var container = document.getElementById('sections-container');
   container.innerHTML = '';
 
   proj.sections.forEach((section, sIdx) => {
-    const color = SECTION_COLORS[sIdx % SECTION_COLORS.length];
-    const card = document.createElement('div');
+    var color = SECTION_COLORS[sIdx % SECTION_COLORS.length];
+    var card = document.createElement('div');
     card.className = 'card section-card hover-lift';
     card.style.borderTopColor = color;
     card.setAttribute('draggable', 'true');
@@ -1726,7 +1715,7 @@ window.renderDetail = function() {
     card.addEventListener('drop', handleDrop);
     card.addEventListener('dragend', handleDragEnd);
 
-    let html = `
+    var html = `
       <div class="section-header">
         <div class="header-left">
           <i class="fas fa-grip-vertical drag-handle"></i>
@@ -1805,9 +1794,9 @@ window.renderDetail = function() {
 };
 
 window.handleInput = function(el, sIdx, side, iIdx, field) {
-  const proj = projects.find(p => p.id === appState.currentProjectId);
-  const raw = el.value.replace(/,/g, '');
-  const list = side === 'ly' ? proj.sections[sIdx].lyItems : proj.sections[sIdx].tyItems;
+  var proj = projects.find(p => p.id === appState.currentProjectId);
+  var raw = el.value.replace(/,/g, '');
+  var list = side === 'ly' ? proj.sections[sIdx].lyItems : proj.sections[sIdx].tyItems;
   list[iIdx][field] = raw === '' ? 0 : parseFloat(raw);
   if (raw !== '') el.value = Number(raw).toLocaleString();
   saveProjects();
@@ -1817,10 +1806,10 @@ window.handleInput = function(el, sIdx, side, iIdx, field) {
 };
 
 function calculateSectionKPIs(s) {
-  let lyRev=0,lyQty=0,tyRev=0,tyQty=0,planRev=0,planQty=0;
+  var lyRev=0,lyQty=0,tyRev=0,tyQty=0,planRev=0,planQty=0;
   s.lyItems.forEach(i=>{lyRev+=(i.revenue||0);lyQty+=(i.qty||0);});
   s.tyItems.forEach(i=>{tyRev+=(i.aRev||0);tyQty+=(i.aQty||0);planRev+=(i.pRev||0);planQty+=(i.pQty||0);});
-  const revGap=tyRev-lyRev,qtyGap=tyQty-lyQty;
+  var revGap=tyRev-lyRev,qtyGap=tyQty-lyQty;
   return {
     lyRev,tyRev,lyQty,tyQty,planRev,planQty,revGap,qtyGap,
     revGrowth: lyRev>0?((revGap/lyRev)*100):0,
@@ -1831,7 +1820,7 @@ function calculateSectionKPIs(s) {
 }
 
 function createSectionSideHTML(sIdx, proj) {
-  const gR = 'gR_'+sIdx, gV = 'gV_'+sIdx;
+  var gR = 'gR_'+sIdx, gV = 'gV_'+sIdx;
   return `
     <div class="side-kpi-card">
       <div class="side-kpi-header"><i class="fas fa-sack-dollar" style="color:var(--primary)"></i> 營收對比</div>
@@ -1909,12 +1898,12 @@ function buildRingSVG(sIdx, type) {
 }
 
 function updateSectionDOM(sIdx, k) {
-  const tBox = n => n>=0 ? 'trend-bg-up' : 'trend-bg-down';
-  const tTxt = n => n>=0 ? 'trend-text-up' : 'trend-text-down';
-  const tIco = n => n>=0 ? '↗' : '↘';
-  const maxR = Math.max(k.lyRev,k.tyRev)||1, scR = maxR*1.25;
-  const maxQ = Math.max(k.lyQty,k.tyQty)||1, scQ = maxQ*1.25;
-  const $= (id,fn) => { const e=document.getElementById(id); if(e) fn(e); };
+  var tBox = n => n>=0 ? 'trend-bg-up' : 'trend-bg-down';
+  var tTxt = n => n>=0 ? 'trend-text-up' : 'trend-text-down';
+  var tIco = n => n>=0 ? '↗' : '↘';
+  var maxR = Math.max(k.lyRev,k.tyRev)||1, scR = maxR*1.25;
+  var maxQ = Math.max(k.lyQty,k.tyQty)||1, scQ = maxQ*1.25;
+  var $= (id,fn) => { var e=document.getElementById(id); if(e) fn(e); };
   $(`sk-rev-ly-val-${sIdx}`, e=>e.innerText=fmtK(k.lyRev));
   $(`sk-rev-ly-bar-${sIdx}`, e=>e.style.width=Math.max((k.lyRev/scR)*100,2)+'%');
   $(`sk-rev-ty-val-${sIdx}`, e=>e.innerText=fmtK(k.tyRev));
@@ -2088,7 +2077,7 @@ function drawAchieveRing(pct) {
 
 /* ── Tech Debt Fix #2: initTotalBoard 分離 DOM 存在與資料更新 ── */
 function initTotalBoardHTML() {
-  const container = document.getElementById('kpi-wireframe-container');
+  var container = document.getElementById('kpi-wireframe-container');
   /* 只在 DOM 不存在時才建立結構，不因 theme 切換而重建 */
   if (container.querySelector('.wf-card')) return;
 
@@ -2156,17 +2145,17 @@ function initTotalBoardHTML() {
 }
 
 function updateTotalDOM(proj) {
-  let lyRev=0,planRev=0,actRev=0;
+  var lyRev=0,planRev=0,actRev=0;
   proj.sections.forEach(s=>{
     s.lyItems.forEach(i=>lyRev+=(i.revenue||0));
     s.tyItems.forEach(i=>{planRev+=(i.pRev||0);actRev+=(i.aRev||0);});
   });
-  const gr = lyRev>0?((actRev-lyRev)/lyRev)*100:0;
-  const diff = actRev-lyRev;
-  const ach = planRev>0?Math.round((actRev/planRev)*100):0;
-  const sc = Math.ceil(Math.max(lyRev,actRev)/10000)*10000||100000;
-  const chartSc = sc*1.25;
-  const $=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e);};
+  var gr = lyRev>0?((actRev-lyRev)/lyRev)*100:0;
+  var diff = actRev-lyRev;
+  var ach = planRev>0?Math.round((actRev/planRev)*100):0;
+  var sc = Math.ceil(Math.max(lyRev,actRev)/10000)*10000||100000;
+  var chartSc = sc*1.25;
+  var $=(id,fn)=>{var e=document.getElementById(id);if(e)fn(e);};
   $('tot-ly-rev-val', e=>e.innerText=fmtMoney(lyRev));
   $('tot-ty-rev-val', e=>e.innerText=fmtMoney(actRev));
   $('tot-ly-bar-wrap', e=>e.style.height=Math.max((lyRev/chartSc)*100,2)+'%');
@@ -2199,8 +2188,8 @@ function updateTotalDOM(proj) {
 // 目前已是 append 模式，效能顯著優於 V49 的單次整體注入。
 
 window.updateProjectMeta = function() {
-  const p = projects.find(p=>p.id===appState.currentProjectId);
-  const oldLy=p.ly, oldTy=p.ty;
+  var p = projects.find(p=>p.id===appState.currentProjectId);
+  var oldLy=p.ly, oldTy=p.ty;
   p.title = document.getElementById('campaign-title-input').value;
   p.ly    = document.getElementById('year-ly').value;
   p.ty    = document.getElementById('year-ty').value;
@@ -2210,79 +2199,79 @@ window.updateProjectMeta = function() {
 };
 
 window.toggleProjectTag = function(tag) {
-  const p=projects.find(p=>p.id===appState.currentProjectId);
+  var p=projects.find(p=>p.id===appState.currentProjectId);
   p.tags.includes(tag) ? p.tags=p.tags.filter(t=>t!==tag) : p.tags.push(tag);
   saveProjects(); window.renderDetail();
 };
 window.addSection = function() {
-  const p=projects.find(p=>p.id===appState.currentProjectId);
+  var p=projects.find(p=>p.id===appState.currentProjectId);
   p.sections.push({title:'新價格帶區塊',collapsed:false,lyItems:[],tyItems:[]});
   saveProjects(); window.renderDetail();
 };
-window.updateSectionTitle = function(i,v) { const p=projects.find(p=>p.id===appState.currentProjectId); p.sections[i].title=v; saveProjects(); window.updateCharts(); };
+window.updateSectionTitle = function(i,v) { var p=projects.find(p=>p.id===appState.currentProjectId); p.sections[i].title=v; saveProjects(); window.updateCharts(); };
 window.toggleSection = function(i) {
-  const p=projects.find(p=>p.id===appState.currentProjectId);
+  var p=projects.find(p=>p.id===appState.currentProjectId);
   p.sections[i].collapsed=!p.sections[i].collapsed; saveProjects();
-  const cards=document.querySelectorAll('#sections-container .section-card');
+  var cards=document.querySelectorAll('#sections-container .section-card');
   if(cards[i]){
-    const body=cards[i].querySelector('.section-body');
-    const icon=cards[i].querySelector('.header-controls i');
+    var body=cards[i].querySelector('.section-body');
+    var icon=cards[i].querySelector('.header-controls i');
     p.sections[i].collapsed ? body.classList.add('collapsed') : body.classList.remove('collapsed');
     if(icon) icon.className=`fas fa-chevron-up ${p.sections[i].collapsed?'fa-rotate-180':''}`;
   }
 };
-window.updateItem = function(s,side,i,f,v) { const p=projects.find(p=>p.id===appState.currentProjectId); const list=side==='ly'?p.sections[s].lyItems:p.sections[s].tyItems; if(f==='name')list[i][f]=v; saveProjects(); window.updateCharts(); };
-window.addItem = function(s,side) { const p=projects.find(p=>p.id===appState.currentProjectId); if(side==='ly')p.sections[s].lyItems.push({name:'',qty:0,revenue:0}); else p.sections[s].tyItems.push({name:'',pQty:0,pRev:0,aQty:0,aRev:0}); saveProjects(); window.renderDetail(); };
-window.removeItem = function(s,side,i) { if(confirm('刪除此行？')){const p=projects.find(p=>p.id===appState.currentProjectId);const list=side==='ly'?p.sections[s].lyItems:p.sections[s].tyItems;list.splice(i,1);saveProjects();window.renderDetail();} };
-window.removeSection = function(i) { if(confirm('刪除整區？')){const p=projects.find(p=>p.id===appState.currentProjectId);p.sections.splice(i,1);saveProjects();window.renderDetail();} };
+window.updateItem = function(s,side,i,f,v) { var p=projects.find(p=>p.id===appState.currentProjectId); var list=side==='ly'?p.sections[s].lyItems:p.sections[s].tyItems; if(f==='name')list[i][f]=v; saveProjects(); window.updateCharts(); };
+window.addItem = function(s,side) { var p=projects.find(p=>p.id===appState.currentProjectId); if(side==='ly')p.sections[s].lyItems.push({name:'',qty:0,revenue:0}); else p.sections[s].tyItems.push({name:'',pQty:0,pRev:0,aQty:0,aRev:0}); saveProjects(); window.renderDetail(); };
+window.removeItem = function(s,side,i) { if(confirm('刪除此行？')){var p=projects.find(p=>p.id===appState.currentProjectId);var list=side==='ly'?p.sections[s].lyItems:p.sections[s].tyItems;list.splice(i,1);saveProjects();window.renderDetail();} };
+window.removeSection = function(i) { if(confirm('刪除整區？')){var p=projects.find(p=>p.id===appState.currentProjectId);p.sections.splice(i,1);saveProjects();window.renderDetail();} };
 
 function handleDragStart(e){dragSrcEl=this;e.dataTransfer.effectAllowed='move';this.classList.add('dragging');}
 function handleDragOver(e){if(e.preventDefault)e.preventDefault();return false;}
 function handleDragEnd(){this.classList.remove('dragging');}
-function handleDrop(e){if(e.stopPropagation)e.stopPropagation();if(dragSrcEl!==this){const p=projects.find(p=>p.id===appState.currentProjectId);const si=parseInt(dragSrcEl.getAttribute('data-index'));const ti=parseInt(this.getAttribute('data-index'));[p.sections[si],p.sections[ti]]=[p.sections[ti],p.sections[si]];saveProjects();window.renderDetail();}return false;}
+function handleDrop(e){if(e.stopPropagation)e.stopPropagation();if(dragSrcEl!==this){var p=projects.find(p=>p.id===appState.currentProjectId);var si=parseInt(dragSrcEl.getAttribute('data-index'));var ti=parseInt(this.getAttribute('data-index'));[p.sections[si],p.sections[ti]]=[p.sections[ti],p.sections[si]];saveProjects();window.renderDetail();}return false;}
 
 /* ── Charts ── */
 window.revenueChart=null;window.volumeChart=null;window.revDonut=null;window.volDonut=null;
 
 window.updateCharts = function() {
-  const proj=projects.find(p=>p.id===appState.currentProjectId); if(!proj)return;
-  const cc=getChartColors();
-  const labels=proj.sections.map(s=>s.title);
-  const dLyR=proj.sections.map(s=>s.lyItems.reduce((a,b)=>a+(b.revenue||0),0));
-  const dTyR=proj.sections.map(s=>s.tyItems.reduce((a,b)=>a+(b.aRev||0),0));
-  const dLyQ=proj.sections.map(s=>s.lyItems.reduce((a,b)=>a+(b.qty||0),0));
-  const dTyQ=proj.sections.map(s=>s.tyItems.reduce((a,b)=>a+(b.aQty||0),0));
+  var proj=projects.find(p=>p.id===appState.currentProjectId); if(!proj)return;
+  var cc=getChartColors();
+  var labels=proj.sections.map(s=>s.title);
+  var dLyR=proj.sections.map(s=>s.lyItems.reduce((a,b)=>a+(b.revenue||0),0));
+  var dTyR=proj.sections.map(s=>s.tyItems.reduce((a,b)=>a+(b.aRev||0),0));
+  var dLyQ=proj.sections.map(s=>s.lyItems.reduce((a,b)=>a+(b.qty||0),0));
+  var dTyQ=proj.sections.map(s=>s.tyItems.reduce((a,b)=>a+(b.aQty||0),0));
 
-  let pMap={};
+  var pMap={};
   proj.sections.forEach(s=>s.tyItems.forEach(i=>{
-    if(i.aRev>0||i.aQty>0){const n=i.name||'未命名';if(!pMap[n])pMap[n]={rev:0,qty:0};pMap[n].rev+=i.aRev;pMap[n].qty+=i.aQty;}
+    if(i.aRev>0||i.aQty>0){var n=i.name||'未命名';if(!pMap[n])pMap[n]={rev:0,qty:0};pMap[n].rev+=i.aRev;pMap[n].qty+=i.aQty;}
   }));
-  const sR=Object.entries(pMap).sort((a,b)=>b[1].rev-a[1].rev).slice(0,6);
-  const sQ=Object.entries(pMap).sort((a,b)=>b[1].qty-a[1].qty).slice(0,6);
-  const hasR=sR.length>0&&sR[0][1].rev>0;
-  const hasQ=sQ.length>0&&sQ[0][1].qty>0;
+  var sR=Object.entries(pMap).sort((a,b)=>b[1].rev-a[1].rev).slice(0,6);
+  var sQ=Object.entries(pMap).sort((a,b)=>b[1].qty-a[1].qty).slice(0,6);
+  var hasR=sR.length>0&&sR[0][1].rev>0;
+  var hasQ=sQ.length>0&&sQ[0][1].qty>0;
 
   Chart.defaults.color=cc.text;
-  const bCfg={barPercentage:.9,categoryPercentage:.45,borderRadius:8,borderSkipped:'bottom',maxBarThickness:32};
-  const bOpts={responsive:true,maintainAspectRatio:false,layout:{padding:{top:10}},scales:{x:{grid:{color:cc.grid},ticks:{color:cc.text}},y:{grace:'30%',grid:{color:cc.grid},ticks:{color:cc.text,maxTicksLimit:6}}},plugins:{legend:{position:'top',labels:{color:cc.text,usePointStyle:true,padding:15}}}};
+  var bCfg={barPercentage:.9,categoryPercentage:.45,borderRadius:8,borderSkipped:'bottom',maxBarThickness:32};
+  var bOpts={responsive:true,maintainAspectRatio:false,layout:{padding:{top:10}},scales:{x:{grid:{color:cc.grid},ticks:{color:cc.text}},y:{grace:'30%',grid:{color:cc.grid},ticks:{color:cc.text,maxTicksLimit:6}}},plugins:{legend:{position:'top',labels:{color:cc.text,usePointStyle:true,padding:15}}}};
 
-  const makeGrad=(ctx,c1,c2)=>{const g=ctx.createLinearGradient(0,400,0,0);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
+  var makeGrad=(ctx,c1,c2)=>{var g=ctx.createLinearGradient(0,400,0,0);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
 
-  const revEl=document.getElementById('revenueChart');
-  if(revEl){if(window.revenueChart)window.revenueChart.destroy();const ctx=revEl.getContext('2d');window.revenueChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:`${proj.ly} 營收`,data:dLyR,backgroundColor:makeGrad(ctx,'#93c5fd','#3b82f6'),...bCfg,datalabels:{align:'top',anchor:'end',offset:4,color:cc.text}},{label:`${proj.ty} 營收`,data:dTyR,backgroundColor:makeGrad(ctx,'#6ee7b7','#059669'),...bCfg,datalabels:{align:'top',anchor:'end',color:isDarkMode?'#6ee7b7':'#059669',font:{weight:'bold'},offset:4}}]},options:{...bOpts,plugins:{...bOpts.plugins,datalabels:{formatter:v=>v>0?'$'+(v/1000).toFixed(0)+'k':'',color:cc.text}}}});}
+  var revEl=document.getElementById('revenueChart');
+  if(revEl){if(window.revenueChart)window.revenueChart.destroy();var ctx=revEl.getContext('2d');window.revenueChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:`${proj.ly} 營收`,data:dLyR,backgroundColor:makeGrad(ctx,'#93c5fd','#3b82f6'),...bCfg,datalabels:{align:'top',anchor:'end',offset:4,color:cc.text}},{label:`${proj.ty} 營收`,data:dTyR,backgroundColor:makeGrad(ctx,'#6ee7b7','#059669'),...bCfg,datalabels:{align:'top',anchor:'end',color:isDarkMode?'#6ee7b7':'#059669',font:{weight:'bold'},offset:4}}]},options:{...bOpts,plugins:{...bOpts.plugins,datalabels:{formatter:v=>v>0?'$'+(v/1000).toFixed(0)+'k':'',color:cc.text}}}});}
 
-  const volEl=document.getElementById('volumeChart');
-  if(volEl){if(window.volumeChart)window.volumeChart.destroy();const ctx=volEl.getContext('2d');window.volumeChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:`${proj.ly} 銷量`,data:dLyQ,backgroundColor:makeGrad(ctx,'#93c5fd','#3b82f6'),...bCfg,datalabels:{align:'top',anchor:'end',offset:4,color:cc.text}},{label:`${proj.ty} 銷量`,data:dTyQ,backgroundColor:makeGrad(ctx,'#6ee7b7','#059669'),...bCfg,datalabels:{align:'top',anchor:'end',color:isDarkMode?'#6ee7b7':'#059669',font:{weight:'bold'},offset:4}}]},options:{...bOpts,plugins:{...bOpts.plugins,datalabels:{formatter:v=>v>0?v.toLocaleString():'',color:cc.text}}}});}
+  var volEl=document.getElementById('volumeChart');
+  if(volEl){if(window.volumeChart)window.volumeChart.destroy();var ctx=volEl.getContext('2d');window.volumeChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:`${proj.ly} 銷量`,data:dLyQ,backgroundColor:makeGrad(ctx,'#93c5fd','#3b82f6'),...bCfg,datalabels:{align:'top',anchor:'end',offset:4,color:cc.text}},{label:`${proj.ty} 銷量`,data:dTyQ,backgroundColor:makeGrad(ctx,'#6ee7b7','#059669'),...bCfg,datalabels:{align:'top',anchor:'end',color:isDarkMode?'#6ee7b7':'#059669',font:{weight:'bold'},offset:4}}]},options:{...bOpts,plugins:{...bOpts.plugins,datalabels:{formatter:v=>v>0?v.toLocaleString():'',color:cc.text}}}});}
 
-  const dColors=['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#64748b'];
-  const dOpts={responsive:true,maintainAspectRatio:false,cutout:'70%',layout:{padding:10},plugins:{legend:{position:'right',labels:{color:cc.text,padding:18,usePointStyle:true}}}};
-  const revTot=hasR?sR.reduce((s,i)=>s+i[1].rev,0):1;
-  const qtyTot=hasQ?sQ.reduce((s,i)=>s+i[1].qty,0):1;
+  var dColors=['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#64748b'];
+  var dOpts={responsive:true,maintainAspectRatio:false,cutout:'70%',layout:{padding:10},plugins:{legend:{position:'right',labels:{color:cc.text,padding:18,usePointStyle:true}}}};
+  var revTot=hasR?sR.reduce((s,i)=>s+i[1].rev,0):1;
+  var qtyTot=hasQ?sQ.reduce((s,i)=>s+i[1].qty,0):1;
 
-  const rdEl=document.getElementById('revenueDonut');
+  var rdEl=document.getElementById('revenueDonut');
   if(rdEl){if(window.revDonut)window.revDonut.destroy();window.revDonut=new Chart(rdEl,{type:'doughnut',data:{labels:hasR?sR.map(i=>i[0]):['目前無資料'],datasets:[{data:hasR?sR.map(i=>i[1].rev):[1],backgroundColor:hasR?dColors:[isDarkMode?'#334155':'#e2e8f0'],borderWidth:isDarkMode?2:1,borderColor:isDarkMode?'#1e293b':'#fff',hoverOffset:12}]},options:{...dOpts,plugins:{...dOpts.plugins,datalabels:{color:'#fff',font:{weight:'bold',size:11},textAlign:'center',formatter:v=>{if(!hasR||v<=0)return'';return'$'+(v/1000).toFixed(0)+'k\n'+((v/revTot)*100).toFixed(1)+'%';}}}}})}
 
-  const vdEl=document.getElementById('volumeDonut');
+  var vdEl=document.getElementById('volumeDonut');
   if(vdEl){if(window.volDonut)window.volDonut.destroy();window.volDonut=new Chart(vdEl,{type:'doughnut',data:{labels:hasQ?sQ.map(i=>i[0]):['目前無資料'],datasets:[{data:hasQ?sQ.map(i=>i[1].qty):[1],backgroundColor:hasQ?dColors:[isDarkMode?'#334155':'#e2e8f0'],borderWidth:isDarkMode?2:1,borderColor:isDarkMode?'#1e293b':'#fff',hoverOffset:12}]},options:{...dOpts,plugins:{...dOpts.plugins,datalabels:{color:'#fff',font:{weight:'bold',size:11},textAlign:'center',formatter:v=>{if(!hasQ||v<=0)return'';return v.toLocaleString()+'\n'+((v/qtyTot)*100).toFixed(1)+'%';}}}}})}
 };
 
