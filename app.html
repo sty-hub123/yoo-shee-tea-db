@@ -143,12 +143,12 @@ body {
 
 /* ── Sidebar ── */
 .sidebar {
-  width: 56px;
+  width: var(--sidebar-w);
   background: var(--bg-sidebar);
   backdrop-filter: var(--blur-strong);
   -webkit-backdrop-filter: var(--blur-strong);
   border-right: 0.5px solid var(--border);
-  padding: 20px 10px;
+  padding: 24px 18px;
   position: fixed;
   top: 0; left: 0; bottom: 0;
   z-index: 100;
@@ -159,42 +159,18 @@ body {
   transition: width .3s cubic-bezier(0.16,1,0.3,1), background .3s, padding .3s;
   overflow: hidden;
 }
-.sidebar:hover {
-  width: var(--sidebar-w);
-  padding: 24px 18px;
+.sidebar.collapsed {
+  transform: translateX(calc(-1 * var(--sidebar-w) + 52px));
 }
-.sidebar .brand-text,
-.sidebar .side-title,
-.sidebar .nav-item span,
-.sidebar .user-info,
-.sidebar .nav-item i ~ *,
-.sidebar .user-name,
-.sidebar .user-email {
+.sidebar.collapsed .brand-text,
+.sidebar.collapsed .side-title,
+.sidebar.collapsed .divider,
+.sidebar.collapsed .user-info {
   opacity: 0;
-  transition: opacity .2s ease;
-  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity .15s ease;
 }
-.sidebar:hover .brand-text,
-.sidebar:hover .side-title,
-.sidebar:hover .user-info,
-.sidebar:hover .user-name,
-.sidebar:hover .user-email {
-  opacity: 1;
-}
-.sidebar .nav-item {
-  overflow: hidden;
-  justify-content: flex-start;
-}
-.sidebar .divider {
-  opacity: 0;
-  transition: opacity .2s ease;
-}
-.sidebar:hover .divider {
-  opacity: 1;
-}
-.sidebar-user {
-  overflow: hidden;
-}
+.sidebar-user { overflow: hidden; }
 
 .brand {
   display: flex;
@@ -974,12 +950,18 @@ body {
 
 <div class="app-container">
   <aside class="sidebar no-print">
-    <div class="brand">
-      <div class="logo-mark">Y</div>
-      <div class="brand-text">
-        <h1>Yoo Shee Tea</h1>
-        <p>羽曦堂 · 營運戰情室</p>
+    <div class="brand" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div class="logo-mark">Y</div>
+        <div class="brand-text">
+          <h1>Yoo Shee Tea</h1>
+          <p>羽曦堂 · 營運戰情室</p>
+        </div>
       </div>
+      <button onclick="window.toggleSidebar()" id="sidebar-toggle-btn" title="收合側欄"
+        style="all:unset;cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);background:var(--bg-hover);transition:.18s;flex-shrink:0">
+        <i class="fas fa-chevron-left" id="sidebar-toggle-icon" style="font-size:11px;transition:transform .3s"></i>
+      </button>
     </div>
 
     <nav class="nav-menu" id="nav-hub" style="display:flex">
@@ -2087,6 +2069,33 @@ window.updateCharts = function() {
 
 /* ── Boot ── */
 Chart.register(ChartDataLabels);
+
+/* Sidebar collapse toggle */
+var sidebarCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+window.toggleSidebar = function() {
+  sidebarCollapsed = !sidebarCollapsed;
+  localStorage.setItem('sidebar_collapsed', sidebarCollapsed);
+  applySidebarState();
+};
+function applySidebarState() {
+  var sidebar = document.querySelector('.sidebar');
+  var icon    = document.getElementById('sidebar-toggle-icon');
+  var main    = document.querySelector('.main-content');
+  if (sidebarCollapsed) {
+    sidebar.classList.add('collapsed');
+    if (icon) icon.style.transform = 'rotate(180deg)';
+    if (main) main.style.paddingLeft = 'calc(48px + 36px)';
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (icon) icon.style.transform = 'rotate(0deg)';
+    if (main) main.style.paddingLeft = 'calc(var(--sidebar-w) + 36px)';
+  }
+}
+/* Apply on load */
+document.addEventListener('DOMContentLoaded', function() {
+  applySidebarState();
+});
+
 initAuth();
 </script>
 </body>
