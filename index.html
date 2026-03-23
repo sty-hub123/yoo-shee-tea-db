@@ -7,7 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Outfit','Microsoft JhengHei',system-ui,sans-serif}
@@ -88,9 +91,939 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Outfit','Microsoft
 .footer-text{font-family:'Urbanist',sans-serif;font-size:11px;font-weight:500;color:rgba(42,62,100,.32);letter-spacing:.6px}
 .footer-text strong{font-weight:700;color:rgba(42,62,100,.42)}
 @keyframes fu{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+/* ── APP CSS ── */
+/* ═══════════════════════════════════════════
+   V50 DESIGN SYSTEM — 羽曦堂 戰情室
+   科技人文 · 溫暖極簡 · Frosted Glass
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Background */
+  --bg-body:        #e8edf8;
+  --bg-card:        rgba(255,255,255,0.72);
+  --bg-card-solid:  #ffffff;
+  --bg-sidebar:     rgba(255,255,255,0.82);
+  --bg-subtle:      rgba(255,255,255,0.45);
+  --bg-input:       #ffffff;
+  --bg-hover:       rgba(37,99,235,0.04);
+  --bg-selected:    rgba(37,99,235,0.07);
+
+  /* Borders */
+  --border:         rgba(255,255,255,0.9);
+  --border-soft:    rgba(180,200,240,0.5);
+  --border-input:   #dde3f0;
+
+  /* Text */
+  --text-main:      #1a2240;
+  --text-muted:     #6878aa;
+  --text-subtle:    #9aaac8;
+
+  /* Brand */
+  --primary:        #2563eb;
+  --primary-hover:  #1d55d8;
+  --primary-light:  rgba(37,99,235,0.10);
+  --primary-glow:   rgba(37,99,235,0.22);
+
+  /* Brand gold (毛利 accent) */
+  --gold:           #b8892a;
+  --gold-light:     rgba(184,137,42,0.10);
+
+  /* 台灣股市功能色 */
+  --up:             #dc2626;   /* 成長↑ 紅 */
+  --up-bg:          rgba(220,38,38,0.08);
+  --down:           #059669;   /* 衰退↓ 綠 */
+  --down-bg:        rgba(5,150,105,0.08);
+
+  /* Chart */
+  --ly-blue:        #3b82f6;
+  --ty-green:       #10b981;
+  --chart-grid:     #e2e8f0;
+
+  /* Apple Rings */
+  --ring-rev-start: #34d399;
+  --ring-rev-end:   #047857;
+  --ring-vol-start: #fcd34d;
+  --ring-vol-end:   #b45309;
+  --ring-track:     rgba(0,0,0,0.12);
+
+  /* Layout */
+  --sidebar-w:      268px;
+  --radius:         14px;
+  --radius-sm:      8px;
+  --blur:           blur(20px);
+  --blur-strong:    blur(32px);
+
+  /* Transitions */
+  --ease-spring:    cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-bounce:    cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] {
+  --bg-body:        #0d1628;
+  --bg-card:        rgba(30,45,80,0.75);
+  --bg-card-solid:  #1a2a50;
+  --bg-sidebar:     rgba(18,30,60,0.90);
+  --bg-subtle:      rgba(30,45,80,0.45);
+  --bg-input:       rgba(20,35,65,0.8);
+  --bg-hover:       rgba(37,99,235,0.08);
+  --bg-selected:    rgba(37,99,235,0.14);
+  --border:         rgba(60,90,150,0.5);
+  --border-soft:    rgba(60,90,150,0.35);
+  --border-input:   rgba(80,110,170,0.4);
+  --text-main:      #e8edf8;
+  --text-muted:     #8898be;
+  --text-subtle:    #5a6888;
+  --primary-light:  rgba(37,99,235,0.18);
+  --up:             #f87171;
+  --up-bg:          rgba(239,68,68,0.12);
+  --down:           #34d399;
+  --down-bg:        rgba(52,211,153,0.12);
+  --chart-grid:     #1e3060;
+  --ring-track:     rgba(255,255,255,0.08);
+}
+
+/* ── Base ── */
+body {
+  font-family: 'Urbanist', 'Microsoft JhengHei', system-ui, sans-serif;
+  background: var(--bg-body);
+  color: var(--text-main);
+  min-height: 100vh;
+  transition: background .3s, color .3s;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+/* Frosted card mixin */
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* ── Hover lift ── */
+.hover-lift {
+  transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring);
+  will-change: transform, box-shadow;
+}
+.hover-lift:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 16px 36px rgba(37,99,235,0.13);
+}
+[data-theme="dark"] .hover-lift:hover {
+  box-shadow: 0 16px 36px rgba(0,0,20,0.45);
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.app-container { position: relative; width: 100%; min-height: 100vh; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg-sidebar);
+  backdrop-filter: var(--blur-strong);
+  -webkit-backdrop-filter: var(--blur-strong);
+  border-right: 0.5px solid var(--border);
+  padding: 24px 18px;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  box-shadow: 2px 0 20px rgba(37,99,235,0.06);
+  transition: transform .3s cubic-bezier(0.16,1,0.3,1), background .3s;
+  overflow: hidden;
+}
+.sidebar.collapsed {
+  transform: translateX(calc(-1 * var(--sidebar-w) + 52px));
+}
+.sidebar.collapsed .brand-text,
+.sidebar.collapsed .side-title,
+.sidebar.collapsed .divider,
+.sidebar.collapsed .user-info {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
+.sidebar-user { overflow: hidden; }
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 28px;
+  padding: 0 6px;
+}
+.logo-mark {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; font-weight: 800;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.32);
+  flex-shrink: 0;
+}
+.brand-text { min-width: 0; }
+.brand-text h1 { font-size: 14px; font-weight: 800; color: var(--text-main); margin: 0; letter-spacing: 0.2px; }
+.brand-text p { font-size: 11px; color: var(--text-muted); margin: 0; }
+
+.nav-menu { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
+.nav-menu::-webkit-scrollbar { width: 3px; }
+.nav-menu::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 10px; }
+
+.side-title {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--text-subtle);
+  padding: 0 8px;
+  margin: 16px 0 8px;
+  display: block;
+}
+
+.nav-item {
+  all: unset;
+  width: 100%; padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px; font-weight: 600;
+  transition: background .18s, color .18s;
+  white-space: nowrap;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--primary); }
+.nav-item.active { background: var(--primary-light); color: var(--primary); }
+.nav-item.danger { color: var(--up); }
+.nav-item.danger:hover { background: var(--up-bg); }
+.nav-item i { width: 16px; text-align: center; flex-shrink: 0; }
+
+.divider { height: 0.5px; background: var(--border-soft); margin: 10px 0; }
+
+/* User info in sidebar */
+.sidebar-user {
+  margin-top: auto;
+  padding: 10px 8px 0;
+  border-top: 0.5px solid var(--border-soft);
+}
+.user-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+}
+.user-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 12px; font-weight: 800;
+  flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 12px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-email { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn-signout {
+  all: unset; cursor: pointer;
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  transition: background .18s, color .18s;
+  flex-shrink: 0;
+}
+.btn-signout:hover { background: var(--up-bg); color: var(--up); }
+
+/* ── Main content ── */
+.main-content {
+  padding: 28px 36px 80px calc(var(--sidebar-w) + 36px);
+  min-height: 100vh;
+  transition: padding .3s;
+}
+
+/* ─── Top Bar ─── */
+.top-bar {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 20px; gap: 20px;
+}
+.page-title h2 {
+  font-size: 22px; font-weight: 800;
+  color: var(--text-main); margin-bottom: 4px; letter-spacing: -0.3px;
+}
+.page-title p { font-size: 13px; color: var(--text-muted); }
+
+/* ─── Filter Bar ─── */
+.filter-bar {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 24px; gap: 16px;
+}
+.search-box {
+  display: flex; align-items: center;
+  background: var(--bg-card-solid);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  padding: 0 14px; height: 40px;
+  flex: 1; max-width: 380px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.search-box:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+.search-box i { color: var(--text-muted); margin-right: 10px; font-size: 13px; }
+.search-box input {
+  border: none; outline: none; width: 100%;
+  font-size: 13px; color: var(--text-main);
+  background: transparent; font-family: inherit;
+  -webkit-text-fill-color: var(--text-main);
+}
+.filter-group { display: flex; gap: 10px; }
+.filter-select {
+  height: 40px; padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-input);
+  background: var(--bg-card-solid);
+  color: var(--text-main);
+  font-size: 13px; font-family: inherit;
+  cursor: pointer; outline: none;
+  transition: border-color .2s;
+}
+.filter-select:focus { border-color: var(--primary); }
+
+/* ─── Project Grid ─── */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+.project-card-hub {
+  background: var(--bg-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  cursor: pointer;
+  display: flex; flex-direction: column; gap: 12px;
+  min-height: 190px; position: relative;
+  transition: border-color .2s, transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring);
+}
+.project-card-hub:hover {
+  border-color: var(--primary);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 16px 36px rgba(37,99,235,0.13);
+}
+.hub-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.hub-card-title { font-size: 17px; font-weight: 800; color: var(--text-main); margin: 5px 0 0; }
+.hub-card-years {
+  font-size: 11px; color: var(--text-muted);
+  background: var(--bg-selected);
+  padding: 3px 8px; border-radius: 6px; font-weight: 700;
+  white-space: nowrap;
+}
+.hub-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.hub-card-kpi { display: flex; flex-direction: column; gap: 2px; margin-top: auto; }
+.hub-kpi-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+.hub-kpi-val { font-size: 24px; font-weight: 800; color: var(--text-main); }
+.hub-kpi-trend { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+
+.add-new-card {
+  border: 2px dashed var(--border-soft);
+  background: var(--bg-subtle);
+  align-items: center; justify-content: center; text-align: center;
+  min-height: 190px;
+}
+.add-new-card:hover { background: var(--primary-light); border-color: var(--primary); }
+
+.btn-duplicate {
+  position: absolute; bottom: 20px; right: 20px;
+  color: var(--text-muted); background: var(--bg-subtle);
+  border: 0.5px solid var(--border-soft);
+  width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center;
+  cursor: pointer; transition: .2s; font-size: 12px;
+}
+.btn-duplicate:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+.badge-id {
+  background: var(--text-muted); color: #fff;
+  padding: 3px 8px; border-radius: 5px;
+  font-size: 11px; font-weight: 700;
+  font-family: monospace; letter-spacing: 1px;
+}
+.badge-tag {
+  background: var(--bg-selected); color: var(--primary);
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  border: 0.5px solid rgba(37,99,235,0.2);
+  cursor: pointer; transition: .2s;
+}
+.badge-tag:hover { background: var(--primary-light); }
+.badge-tag.active { background: var(--primary) !important; color: #fff !important; border-color: var(--primary) !important; }
+
+/* ═══════════════════════════════════════════
+   DETAIL VIEW
+═══════════════════════════════════════════ */
+.title-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.editable-title-wrapper { display: flex; align-items: center; gap: 12px; }
+.campaign-title-input {
+  border: none;
+  border-bottom: 2.5px solid var(--primary);
+  font-size: 22px; font-weight: 800;
+  color: var(--primary); width: 220px;
+  background: transparent; padding: 0 4px 2px;
+  font-family: inherit;
+  transition: all .25s;
+}
+.campaign-title-input:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+  background: var(--primary-light);
+  border-radius: 6px 6px 0 0;
+  padding: 2px 8px;
+}
+
+.year-config {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-card); backdrop-filter: var(--blur);
+  padding: 4px 12px; border-radius: 8px;
+  border: 0.5px solid var(--border);
+}
+.year-label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.year-arrow { color: var(--text-muted); font-size: 11px; }
+.year-input {
+  width: 58px; border: 1.5px solid var(--border-input);
+  border-radius: 6px; padding: 4px;
+  font-size: 13px; font-weight: 700;
+  color: var(--text-main); text-align: center;
+  background: var(--bg-input); font-family: inherit;
+  transition: border-color .2s;
+}
+.year-input:focus { outline: none; border-color: var(--primary); }
+
+.header-actions { display: flex; align-items: center; gap: 12px; }
+.meta-info {
+  font-size: 12px; color: var(--text-muted);
+  background: var(--bg-card); backdrop-filter: var(--blur);
+  padding: 6px 12px; border-radius: 20px;
+  border: 0.5px solid var(--border);
+}
+
+.btn-print-a3 {
+  all: unset; cursor: pointer;
+  background: var(--primary); color: #fff;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+  transition: background .2s, transform .2s;
+}
+.btn-print-a3:hover { background: var(--primary-hover); transform: translateY(-2px); }
+
+.project-tags-area { margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.memo-container { width: 100%; margin-bottom: 20px; }
+#project-memo-input {
+  width: 100%; min-height: 48px;
+  background: var(--bg-card);
+  backdrop-filter: var(--blur);
+  border: 0.5px dashed var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px; color: var(--text-main);
+  font-family: inherit; resize: vertical;
+  transition: border-color .2s;
+  -webkit-text-fill-color: var(--text-main);
+}
+#project-memo-input:focus { outline: none; border-color: var(--primary); }
+
+/* ─── Section Cards ─── */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.section-card { border-top-width: 4px; border-top-style: solid; }
+
+.section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 20px;
+  border-bottom: 0.5px solid var(--border-soft);
+  background: var(--bg-subtle);
+  cursor: grab;
+}
+.header-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+.drag-handle { color: var(--text-subtle); cursor: grab; font-size: 14px; }
+.title-input {
+  font-size: 16px; font-weight: 700;
+  border: 1px solid transparent;
+  width: 100%; padding: 5px 8px;
+  border-radius: 6px; background: transparent;
+  color: var(--text-main); font-family: inherit;
+  transition: .2s;
+}
+.title-input:hover { background: var(--bg-card); border-color: var(--border-soft); }
+.title-input:focus { outline: none; background: var(--bg-card); border-color: var(--primary); }
+
+.header-controls { display: flex; align-items: center; gap: 8px; }
+.btn-control {
+  all: unset; cursor: pointer;
+  width: 30px; height: 30px; border-radius: 6px;
+  display: grid; place-items: center;
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+  border: 0.5px solid var(--border-soft);
+  transition: .18s;
+}
+.btn-control:hover { color: var(--text-main); border-color: var(--primary); }
+.btn-delete-section:hover { color: var(--up) !important; background: var(--up-bg) !important; border-color: var(--up) !important; }
+
+.section-body { overflow: hidden; transition: max-height .3s ease; }
+.section-body.collapsed { display: none; }
+
+/* Three column grid */
+.three-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.7fr 1.3fr;
+}
+.col-panel { padding: 18px 20px; }
+.col-border-right { border-right: 0.5px solid var(--border-soft); }
+
+/* Tables */
+.pro-table { width: 100%; border-collapse: collapse; }
+.pro-table tbody tr:nth-child(even) { background: var(--bg-subtle); }
+.pro-table th {
+  text-align: left; padding: 9px 10px;
+  color: var(--text-muted); font-size: 12px; font-weight: 700;
+  border-bottom: 1.5px solid var(--border-soft);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.pro-table td { padding: 14px 10px; vertical-align: middle; font-size: 14px; color: var(--text-main); position: relative; }
+
+.col-plan { background: rgba(248,250,252,0.5); border-right: 2px dashed var(--border-soft); padding-right: 14px !important; }
+.col-actual { padding-left: 14px !important; padding-right: 38px !important; position: relative; }
+.th-plan { color: var(--text-muted) !important; background: rgba(248,250,252,0.5); border-right: 2px dashed var(--border-soft); }
+.th-actual { color: var(--text-main) !important; }
+
+[data-theme="dark"] .col-plan { background: rgba(15,23,42,0.3); }
+
+/* Input groups */
+.input-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.input-row:last-child { margin-bottom: 0; }
+
+.input-group-name {
+  display: flex; align-items: center;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  border-radius: 8px; padding: 0 10px; height: 38px; width: 100%;
+  transition: border-color .2s, box-shadow .2s;
+}
+.input-group-name:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+.input-group-name input { font-weight: 700; width: 100%; color: var(--text-main); -webkit-text-fill-color: var(--text-main); }
+
+.input-group-plan, .input-group-actual {
+  display: flex; align-items: center;
+  border-radius: 8px; padding: 0 8px; height: 38px; width: 100%;
+  background: var(--bg-input);
+  transition: border-color .2s, box-shadow .2s;
+}
+.input-group-plan { border: 1.5px dashed var(--border-input); }
+.input-group-actual { border: 1.5px solid var(--border-input); }
+.input-group-plan:focus-within { border-style: solid; border-color: var(--text-muted); }
+.input-group-actual:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+
+.inner-icon-dollar, .input-group-plan i, .input-group-actual i {
+  color: var(--text-subtle); font-size: 12px; width: 18px; text-align: center;
+}
+.clean-input {
+  border: none; background: transparent; width: 100%; height: 100%;
+  font-size: 14px; color: var(--text-main); text-align: right;
+  font-family: 'Urbanist', monospace; outline: none; font-weight: 600;
+  -webkit-text-fill-color: var(--text-main);
+  user-select: text; -webkit-user-select: text;
+  cursor: text;
+}
+.clean-input.text-left { text-align: left; }
+
+.sys-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; justify-content: center; align-items: center;
+  font-size: 10px; font-weight: 800; flex-shrink: 0; color: #fff !important;
+}
+.sys-dot-b { background: #3b82f6 !important; }
+.sys-dot-g { background: #10b981 !important; }
+
+.row-remove-btn {
+  position: absolute; right: 5px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--up); opacity: 0; cursor: pointer;
+  padding: 5px 7px; transition: .18s;
+  font-size: 13px; background: var(--bg-card);
+  border-radius: 5px; border: 0.5px solid var(--up-bg);
+}
+.pro-table tr:hover .row-remove-btn { opacity: 0.7; }
+.row-remove-btn:hover { opacity: 1 !important; background: var(--up); color: white; }
+
+.btn-ghost {
+  width: 100%; padding: 10px; margin-top: 12px;
+  background: transparent; border: 1.5px dashed var(--border-soft);
+  color: var(--text-muted); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 13px; font-weight: 700;
+  font-family: inherit; transition: .18s;
+}
+.btn-ghost:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+
+.btn-add-section-large {
+  width: 100%; padding: 18px; margin-bottom: 36px;
+  background: transparent; border: 2px dashed var(--border-soft);
+  color: var(--text-muted); font-size: 15px; font-weight: 700;
+  border-radius: var(--radius); cursor: pointer;
+  display: flex; justify-content: center; align-items: center; gap: 10px;
+  font-family: inherit; transition: .18s;
+}
+.btn-add-section-large:hover {
+  background: var(--primary-light); border-color: var(--primary); color: var(--primary);
+}
+
+/* ─── KPI Sidebar ─── */
+.col-kpi-sidebar {
+  background: var(--bg-subtle);
+  display: flex; flex-direction: column; gap: 10px;
+  justify-content: center; padding: 14px;
+}
+.side-kpi-card {
+  background: var(--bg-card);
+  backdrop-filter: var(--blur);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px; display: flex; flex-direction: column;
+  transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring);
+}
+.side-kpi-card:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 10px 24px rgba(37,99,235,0.10);
+}
+.side-kpi-header {
+  font-size: 13px; font-weight: 700; color: var(--text-main);
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+
+/* Trend indicators */
+.sk-body { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: stretch; }
+.sk-box { background: var(--bg-subtle); border: 0.5px solid var(--border-soft); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; justify-content: center; min-width: 0; overflow: hidden; }
+
+.sk-chart-wrapper { position: relative; display: flex; flex-direction: column; gap: 12px; z-index: 1; margin-top: 4px; }
+.sk-chart-bg { position: absolute; top: 0; left: 35px; right: 0; bottom: 0; display: flex; justify-content: space-between; border-left: 1px solid var(--border-soft); z-index: 0; }
+.sk-grid-line { width: 1px; background: var(--border-soft); height: 100%; }
+
+.mc-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; width: 100%; position: relative; z-index: 1; }
+.mc-year { font-size: 11px; font-weight: 700; color: var(--text-muted); width: 32px; flex-shrink: 0; }
+.mc-bar-track { flex: 1; height: 14px; position: relative; border-left: 1px solid var(--border-soft); }
+.mc-bar { height: 100%; border-radius: 0 8px 8px 0; position: absolute; left: 0; top: 0; transition: width 0.8s var(--ease-bounce); min-width: 2%; }
+.mc-bar.ly { background: linear-gradient(90deg, #93c5fd, #3b82f6); }
+.mc-bar.ty { background: linear-gradient(90deg, #6ee7b7, #10b981); }
+.mc-val { font-size: 11px; font-weight: 800; color: var(--text-main); flex-shrink: 0; width: 34px; text-align: left; }
+
+.sk-data-title { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; text-align: center; }
+.sk-data-main { font-size: 20px; font-weight: 900; color: var(--text-main); margin-bottom: 6px; text-align: center; line-height: 1; letter-spacing: -0.5px; }
+.sk-data-trend { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
+.sk-data-diff { font-size: 12px; font-weight: 800; }
+.trend-pill {
+  padding: 2px 6px; border-radius: 20px;
+  font-size: 10px; font-weight: 700; color: #fff !important;
+  display: inline-flex; align-items: center; gap: 2px;
+}
+.trend-pill.trend-bg-up { background: var(--up) !important; }
+.trend-pill.trend-bg-down { background: var(--down) !important; }
+.trend-text-up { color: var(--up) !important; }
+.trend-text-down { color: var(--down) !important; }
+
+/* Apple Rings */
+.apple-ring-wrapper {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: #18181b;
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.05);
+  position: relative; margin: 0 auto;
+}
+/* Canvas ring — drawn via JS, dot technique from codepen */
+.ring-canvas-wrap {
+  position: relative; width: 110px; height: 110px;
+  border-radius: 50%; background: #18181b;
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.5);
+  margin: 0 auto;
+}
+.ring-canvas-wrap canvas { position: absolute; top: 0; left: 0; }
+.ring-dot-cap {
+  position: absolute; width: 100%; height: 100%;
+  border-radius: 50%;
+  transition: transform 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  transform-origin: center center;
+}
+.ring-dot-cap::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: -5.5px;
+  width: 11px; height: 11px;
+  margin-left: -5.5px;
+  border-radius: 50%;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.6);
+}
+.ring-text-content {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.sk-circle-val { font-size: 22px; font-weight: 900; color: #fff; line-height: 1; margin-bottom: 2px; }
+.sk-circle-lbl { font-size: 10px; color: #94a3b8; font-weight: 600; }
+
+/* ═══════════════════════════════════════════
+   EXECUTIVE SUMMARY
+═══════════════════════════════════════════ */
+.executive-summary-section {
+  background: var(--bg-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  padding: 44px 36px;
+  margin-top: 48px;
+}
+.exec-header { text-align: center; margin-bottom: 36px; }
+.exec-header h2 {
+  margin: 0 0 8px; font-size: 24px; font-weight: 800;
+  color: var(--text-main); display: flex; align-items: center;
+  justify-content: center; gap: 10px; letter-spacing: -0.3px;
+}
+.exec-header p { font-size: 13px; color: var(--text-muted); }
+
+.wf-kpi-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.wf-card {
+  background: var(--bg-card-solid);
+  border: 0.5px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 26px; display: flex; flex-direction: column;
+}
+.wf-card-header {
+  font-size: 14px; font-weight: 700; color: var(--text-main);
+  display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+}
+.wf-top-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 20px; border-bottom: 0.5px solid var(--border-soft); margin-bottom: 20px;
+}
+.wf-stat { flex: 1; text-align: center; }
+.wf-stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+.wf-stat-val { font-size: 40px; font-weight: 900; color: var(--text-main); line-height: 1; letter-spacing: -1px; }
+.wf-stat-val-ly { font-size: 22px; font-weight: 500; color: var(--text-muted); line-height: 1; }
+.wf-divider { width: 1px; height: 44px; background: var(--border-soft); }
+.wf-bottom-row { display: flex; gap: 20px; align-items: stretch; width: 100%; flex: 1; }
+
+.wf-mini-chart-box {
+  flex: 1; border: 0.5px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 18px; display: flex; flex-direction: column;
+  align-items: center; justify-content: space-between;
+  background: var(--bg-subtle);
+}
+.wf-mc-title { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 20px; }
+.wf-mc-area { display: flex; width: 100%; height: 110px; position: relative; }
+.wf-mc-y-axis { display: flex; flex-direction: column; justify-content: space-between; padding-right: 10px; font-size: 10px; color: var(--text-muted); width: 50px; text-align: right; position: relative; top: -6px; }
+.wf-mc-graph { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 30px; position: relative; border-bottom: 2px solid var(--border-soft); padding-top: 18px; }
+.wf-mc-grid { position: absolute; width: 100%; height: 100%; top: 0; left: 0; display: flex; flex-direction: column; justify-content: space-between; z-index: 0; }
+.wf-mc-grid-line { width: 100%; border-bottom: 1px dashed var(--border-soft); height: 0; }
+.wf-mc-bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; z-index: 1; position: relative; width: 42px; }
+.wf-mc-bar-wrapper { position: relative; width: 100%; display: flex; align-items: flex-end; justify-content: center; transition: height 0.8s var(--ease-bounce); }
+.wf-mc-bar-value { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: var(--text-main); white-space: nowrap; z-index: 2; }
+.wf-bar { width: 100%; height: 100%; border-radius: 6px 6px 0 0; cursor: pointer; transition: filter .25s; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3); }
+.wf-bar:hover { filter: brightness(0.88); }
+.wf-bar.ly { background: linear-gradient(180deg, #93c5fd, #3b82f6); opacity: 0.85; }
+.wf-bar.ty { background: linear-gradient(180deg, #6ee7b7, #059669); }
+.wf-mc-lbl { position: absolute; bottom: -22px; font-size: 11px; color: var(--text-main); font-weight: 700; white-space: nowrap; }
+
+.wf-growth-box { flex: 1; padding: 18px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.wf-growth-lbl { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+.wf-growth-pct { font-size: 38px; font-weight: 900; line-height: 1; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+.wf-growth-diff { font-size: 14px; font-weight: 700; }
+
+.wf-achieve-box { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
+.wf-achieve-lbl { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; }
+.wf-achieve-pct { font-size: 52px; font-weight: 900; color: var(--up); line-height: 1; margin-bottom: 20px; }
+.wf-progress-container { width: 80%; max-width: 300px; height: 14px; background: var(--chart-grid); border-radius: 8px; overflow: hidden; }
+.progress-fill { height: 100%; transition: width 0.8s var(--ease-bounce); border-radius: 8px; }
+/* Gauge semicircle for achievement */
+.gauge-wrap {
+  position: relative;
+  width: 220px; height: 120px;
+  margin: 0 auto;
+  overflow: visible;
+}
+.gauge-wrap canvas { display: block; }
+.gauge-center-text {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  display: flex; flex-direction: column; align-items: center;
+}
+.gauge-pct {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 38px; font-weight: 900;
+  line-height: 1; margin-bottom: 4px;
+  background: linear-gradient(135deg, #6ee7b7, #059669);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gauge-pct.over { background: linear-gradient(135deg, #fcd34d, #f59e0b); -webkit-background-clip: text; background-clip: text; }
+.gauge-lbl {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+}
+.gauge-needle {
+  position: absolute;
+  bottom: 4px; left: 50%;
+  width: 2px; height: 52px;
+  margin-left: -1px;
+  transform-origin: bottom center;
+  transition: transform 1s cubic-bezier(0.34,1.2,0.64,1);
+}
+.gauge-needle::before {
+  content: ''; position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 2px; height: 44px;
+  background: linear-gradient(180deg, var(--text-main), transparent);
+  border-radius: 2px;
+}
+.gauge-needle::after {
+  content: ''; position: absolute;
+  bottom: -4px; left: 50%; transform: translateX(-50%);
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--text-main);
+  box-shadow: 0 0 6px rgba(37,99,235,0.4);
+}
+
+/* Charts */
+.charts-container { margin-top: 16px; }
+.analytics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+.chart-card {
+  min-height: 320px; display: flex; flex-direction: column;
+  background: var(--bg-card-solid);
+  border: 0.5px solid var(--border-soft);
+  border-radius: var(--radius);
+}
+.card-header {
+  border-bottom: 0.5px solid var(--border-soft);
+  padding: 14px 18px; display: flex; align-items: center;
+}
+.center-header { justify-content: center; }
+.card-header h3 { font-size: 13px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+.chart-wrapper { flex: 1; padding: 10px 18px 18px; min-height: 260px; display: flex; justify-content: center; align-items: center; position: relative; }
+.donut-card .chart-wrapper { min-height: 300px; }
+
+/* ─── Buttons ─── */
+.btn-primary {
+  all: unset; cursor: pointer;
+  background: var(--primary); color: #fff;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700; font-family: inherit;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background .18s, transform .18s;
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
+
+/* ─── Modal ─── */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(10,20,60,0.5); backdrop-filter: blur(8px);
+  z-index: 2000; display: flex; justify-content: center; align-items: center;
+}
+.modal-content {
+  background: var(--bg-card-solid);
+  width: 100%; max-width: 480px;
+  border-radius: var(--radius); border: 0.5px solid var(--border);
+  box-shadow: 0 24px 48px rgba(10,20,60,0.2); overflow: hidden;
+}
+.modal-header {
+  padding: 18px 22px; border-bottom: 0.5px solid var(--border-soft);
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--bg-subtle);
+}
+.modal-header h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+.btn-icon { all: unset; cursor: pointer; font-size: 17px; color: var(--text-muted); transition: color .18s; }
+.btn-icon:hover { color: var(--text-main); }
+.modal-body { padding: 22px; }
+.tag-input-area { display: flex; gap: 10px; margin-bottom: 18px; }
+.tag-pool-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.tag-item-edit {
+  background: var(--bg-selected); border: 0.5px solid rgba(37,99,235,0.2);
+  color: var(--text-main);
+  padding: 5px 12px; border-radius: 20px; font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+}
+.tag-item-edit i { cursor: pointer; color: var(--up); }
+
+/* Loading */
+.loading-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(232,237,248,0.85); backdrop-filter: blur(12px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+.loading-overlay.show { opacity: 1; pointer-events: all; }
+[data-theme="dark"] .loading-overlay { background: rgba(13,22,40,0.85); }
+.spinner { width: 34px; height: 34px; border: 3px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin .75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; font-weight: 600; color: var(--primary); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 28px; right: 28px; z-index: 9000;
+  background: var(--bg-card-solid);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  box-shadow: 0 8px 24px rgba(37,99,235,0.12);
+  font-size: 13px; font-weight: 600; color: var(--text-main);
+  display: flex; align-items: center; gap: 10px;
+  transform: translateY(80px); opacity: 0;
+  transition: transform .4s var(--ease-bounce), opacity .4s ease;
+  max-width: 320px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; flex-shrink: 0; }
+.toast-icon.success { background: var(--down); }
+.toast-icon.error { background: var(--up); }
+.toast-icon.saving { background: var(--primary); }
+
+@media print {
+  @page { size: A3 landscape; margin: 10mm; }
+  body { background: white; color: black; -webkit-print-color-adjust: exact; }
+  .no-print { display: none !important; }
+  .sidebar { display: none !important; }
+  .main-content { margin: 0; padding: 0; width: 100%; }
+  .card, .side-kpi-card, .chart-card { box-shadow: none; border: 1px solid #ccc; transform: none !important; backdrop-filter: none; }
+  .three-col-grid { display: block; }
+  .executive-summary-section { background: white; border: none; padding: 0; margin-top: 20px; backdrop-filter: none; }
+  .analytics-row { display: block; }
+  .chart-card { width: 48%; display: inline-block; vertical-align: top; margin-right: 1%; }
+}
+/* Hide scrollbar on login page */
+#view-login-page { overflow: hidden; height: 100vh; }
+#view-app { min-height: 100vh; }
 </style>
 </head>
 <body>
+
+<!-- Login/Welcome section -->
+<div id="view-login-page">
 <div class="ripple-overlay" id="ripple-overlay"></div>
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
@@ -147,39 +1080,192 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Outfit','Microsoft
   </div>
 </div>
 <div class="footer"><div class="footer-text"><strong>Yoo Shee Tea</strong> · © 2026 All Rights Reserved · <strong>Confidential</strong></div></div>
+</div>
+
+<!-- App section (hidden until logged in) -->
+<div id="view-app" style="display:none">
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">載入中…</div>
+</div>
+
+<div id="toast" class="toast no-print">
+  <div class="toast-icon saving" id="toast-icon"><i class="fas fa-check"></i></div>
+  <span id="toast-msg">已儲存</span>
+</div>
+
+<div class="app-container">
+  <aside class="sidebar no-print">
+    <div class="brand" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div class="logo-mark">Y</div>
+        <div class="brand-text">
+          <h1>Yoo Shee Tea</h1>
+          <p>羽曦堂 · 營運戰情室</p>
+        </div>
+      </div>
+      <button onclick="window.toggleSidebar()" id="sidebar-toggle-btn" title="收合側欄"
+        style="all:unset;cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);background:var(--bg-hover);transition:.18s;flex-shrink:0">
+        <i class="fas fa-chevron-left" id="sidebar-toggle-icon" style="font-size:11px;transition:transform .3s"></i>
+      </button>
+    </div>
+
+    <nav class="nav-menu" id="nav-hub" style="display:flex">
+      <span class="side-title">系統管理</span>
+      <button onclick="window.openTagManager()" class="nav-item"><i class="fas fa-tags"></i> <span class="nav-label">全域標籤管理</span></button>
+      <button onclick="window.exportAllData()" class="nav-item"><i class="fas fa-file-export"></i> <span class="nav-label">匯出備份檔</span></button>
+      <label class="nav-item" style="cursor:pointer">
+        <i class="fas fa-file-import"></i> <span class="nav-label">匯入備份檔</span>
+        <input type="file" id="import-file" style="display:none" onchange="window.importData(event)" accept=".json">
+      </label>
+      <div class="divider"></div>
+      <button onclick="window.toggleTheme()" class="nav-item theme-toggle-btn"><i class="fas fa-moon"></i> <span class="nav-label">切換深色模式</span></button>
+      <button onclick="window.clearAllData()" class="nav-item danger" style="margin-top:auto"><i class="fas fa-trash-alt"></i> 清空系統資料</button>
+    </nav>
+
+    <nav class="nav-menu" id="nav-detail" style="display:none">
+      <button onclick="window.goBackToHub()" class="nav-item active"><i class="fas fa-arrow-left"></i> <span class="nav-label">回到檔期總覽</span></button>
+      <div class="divider"></div>
+      <button onclick="window.updateCharts()" class="nav-item"><i class="fas fa-sync-alt"></i> <span class="nav-label">刷新圖表</span></button>
+      <button onclick="window.print()" class="nav-item"><i class="fas fa-print"></i> <span class="nav-label">列印 A3 報表</span></button>
+      <div class="divider"></div>
+      <button onclick="window.toggleTheme()" class="nav-item theme-toggle-btn"><i class="fas fa-moon"></i> <span class="nav-label">切換深色模式</span></button>
+      <button onclick="window.deleteCurrentProject()" class="nav-item danger" style="margin-top:auto"><i class="fas fa-trash-alt"></i> <span class="nav-label">刪除此專案</span></button>
+    </nav>
+
+    <div class="sidebar-user no-print">
+      <div class="user-row">
+        <div class="user-avatar" id="user-avatar">S</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">載入中…</div>
+          <div class="user-email" id="user-email"></div>
+        </div>
+        <button class="btn-signout" onclick="window.doSignOut()" title="登出">
+          <i class="fas fa-sign-out-alt" style="font-size:13px"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <!-- Hub View -->
+    <div id="view-hub" style="display:block">
+      <header class="top-bar">
+        <div class="page-title">
+          <h2>歷年檔期總覽 <span style="color:var(--text-muted);font-size:14px;font-weight:500">(Projects)</span></h2>
+          <p>管理與回顧所有節慶檔期的銷售戰況</p>
+        </div>
+      </header>
+      <div class="filter-bar no-print">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="search-input" placeholder="搜尋專案名稱或 ID…" oninput="window.renderHub()">
+        </div>
+        <div class="filter-group">
+          <select id="filter-year" class="filter-select" onchange="window.renderHub()"><option value="">所有年份</option></select>
+          <select id="filter-tag" class="filter-select" onchange="window.renderHub()"><option value="">所有標籤</option></select>
+        </div>
+      </div>
+      <div id="project-grid" class="project-grid"></div>
+    </div>
+
+    <!-- Detail View -->
+    <div id="view-detail" style="display:none">
+      <header class="top-bar" style="margin-bottom:10px">
+        <div class="page-title">
+          <div class="title-row" style="align-items:center">
+            <div class="editable-title-wrapper">
+              <input type="text" id="campaign-title-input" class="campaign-title-input" value="檔期名稱" onchange="window.updateProjectMeta()">
+              <span id="project-id-display" class="badge-id">PRJ-XXXXX</span>
+            </div>
+            <div class="year-config">
+              <span class="year-label">基準:</span>
+              <input type="text" id="year-ly" class="year-input" value="2025" onchange="window.updateProjectMeta()">
+              <span class="year-arrow">→</span>
+              <span class="year-label">目標:</span>
+              <input type="text" id="year-ty" class="year-input" value="2026" onchange="window.updateProjectMeta()">
+            </div>
+          </div>
+          <div class="project-tags-area no-print" id="project-tags-container"></div>
+        </div>
+        <div class="header-actions no-print">
+          <div class="meta-info"><i class="fas fa-calendar-check"></i> <span id="current-date"></span></div>
+          <button class="btn-print-a3 hover-lift" onclick="window.print()"><i class="fas fa-print"></i> 列印 A3</button>
+        </div>
+      </header>
+
+      <div class="memo-container no-print">
+        <textarea id="project-memo-input" placeholder="📔 備忘錄、行銷策略、覆盤筆記…" onchange="window.updateProjectMeta()"></textarea>
+      </div>
+
+      <div id="sections-container" class="dashboard-grid"></div>
+
+      <button class="btn-add-section-large no-print" onclick="window.addSection()">
+        <i class="fas fa-plus"></i> 新增價格帶區塊
+      </button>
+
+      <section class="executive-summary-section">
+        <div class="exec-header">
+          <h2><i class="fas fa-chart-pie" style="color:var(--primary)"></i> 全檔期戰力總結 (Executive Summary)</h2>
+          <p>高階營運儀表板：營收成長、目標達成與產品貢獻度綜覽</p>
+        </div>
+        <div class="wf-kpi-container" id="kpi-wireframe-container"></div>
+        <div class="charts-container">
+          <div class="analytics-row">
+            <div class="card chart-card hover-lift"><div class="card-header center-header"><h3><i class="fas fa-chart-line" style="color:var(--primary)"></i> 檔期產品 <span style="color:var(--primary)">營收</span> 成長分析</h3></div><div class="chart-wrapper"><canvas id="revenueChart"></canvas></div></div>
+            <div class="card chart-card hover-lift"><div class="card-header center-header"><h3><i class="fas fa-boxes-stacked" style="color:var(--ty-green)"></i> 檔期產品 <span style="color:var(--ty-green)">銷量</span> 成長分析</h3></div><div class="chart-wrapper"><canvas id="volumeChart"></canvas></div></div>
+          </div>
+          <div class="analytics-row">
+            <div class="card chart-card donut-card hover-lift"><div class="card-header center-header"><h3><i class="fas fa-chart-pie" style="color:var(--primary)"></i> 營收貢獻度 (Revenue Share)</h3></div><div class="chart-wrapper"><canvas id="revenueDonut"></canvas></div></div>
+            <div class="card chart-card donut-card hover-lift"><div class="card-header center-header"><h3><i class="fas fa-chart-pie" style="color:var(--ty-green)"></i> 銷量貢獻度 (Volume Share)</h3></div><div class="chart-wrapper"><canvas id="volumeDonut"></canvas></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Tag Manager Modal -->
+  <div id="modal-tag-manager" class="modal-overlay" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-tags"></i> 全域標籤管理池</h3>
+        <button class="btn-icon" onclick="window.closeTagManager()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="tag-input-area">
+          <input type="text" id="new-tag-input" class="filter-select" placeholder="輸入新標籤 (如: 母親節)" style="flex:1;max-width:none">
+          <button class="btn-primary" onclick="window.addNewTag()">新增</button>
+        </div>
+        <div id="tag-pool-list" class="tag-pool-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 
 <script>
-// ── Supabase — SAME key as app.html ──
+Chart.register(ChartDataLabels);
+// ── Supabase ──
 var SUPA_URL = 'https://sbhogbwaqzjlhqbckwef.supabase.co';
 var SUPA_KEY = 'sb_publishable_JsnZRdnJSWPTu8_uAQtksA_ldGpXT0W';
 var sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-var APP_URL = 'https://sty-hub123.github.io/yoo-shee-tea-db/app.html';
-var going = false;
 
-function goToApp() {
-  if (going) return;
-  going = true;
-  document.getElementById('loading-overlay').classList.add('show');
-  document.getElementById('loading-text').textContent = '進入系統中…';
-  // Small delay so UI shows, then replace
-  setTimeout(function() { window.location.replace(APP_URL); }, 400);
-}
-
-// On load: if session exists → go directly to app
+// Check session on load
 sb.auth.getSession().then(function(res) {
   if (res.data && res.data.session) {
-    goToApp();
+    // Already logged in — show app directly
+    initAuth();
   }
-}).catch(function() { /* no session, stay here */ });
+}).catch(function() {});
 
-// After OAuth redirect: Supabase fires SIGNED_IN
+// After OAuth redirect
 sb.auth.onAuthStateChange(function(event, session) {
-  if (event === 'SIGNED_IN' && session && !going) {
-    goToApp();
+  if (event === 'SIGNED_IN' && session) {
+    initAuth();
   }
 });
 
-// Google login button
+// Google login
 document.getElementById('btn-google').addEventListener('click', async function() {
   var btn = this;
   btn.disabled = true;
@@ -193,116 +1279,1044 @@ document.getElementById('btn-google').addEventListener('click', async function()
     document.getElementById('error-msg').classList.add('show');
     btn.disabled = false;
   }
-  // On success: Google redirects back here, onAuthStateChange fires
 });
 
-// ── Canvas + page transitions (unchanged) ──
-var dpr = window.devicePixelRatio || 1;
-document.addEventListener('mousemove', function(e) {
-  var g = document.getElementById('glow');
-  g.style.left = e.clientX + 'px'; g.style.top = e.clientY + 'px';
+/* ══ APP JS ══ */
+/* ═══════════════════════════════════════════
+   SUPABASE INIT
+═══════════════════════════════════════════ */
+const SUPABASE_URL = 'https://sbhogbwaqzjlhqbckwef.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JsnZRdnJSWPTu8_uAQtksA_ldGpXT0W';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    storage: window.localStorage,
+    storageKey: 'yoosheetea-auth',
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
 });
 
-var wCvs=document.getElementById('wc'),wCtx=wCvs.getContext('2d');
-var wW,wH,wFS,wPX,wPY,wRun=false,wT=0;
-function setupW(){
-  wFS=Math.max(56,Math.min(108,window.innerWidth*0.09));wPX=wFS*.1;wPY=wFS*.2;
-  wCtx.font='800 '+wFS+'px Urbanist,sans-serif';
-  var m=wCtx.measureText('Welcome');
-  wW=m.width+wPX*2;wH=wFS*1.18+wPY*2;
-  wCvs.width=Math.ceil(wW*dpr);wCvs.height=Math.ceil(wH*dpr);
-  wCvs.style.width=Math.ceil(wW)+'px';wCvs.style.height=Math.ceil(wH)+'px';
-  wCtx.scale(dpr,dpr);
+let currentUser = null;
+
+/* ── Auth Guard ── */
+async function initAuth() {
+  showLoading('驗證身份中…');
+  try {
+    const { data } = await sb.auth.getSession();
+    const session = data && data.session;
+    if (!session) {
+      hideLoading();
+      showLoginView();
+      return;
+    }
+    currentUser = session.user;
+    updateUserUI(currentUser);
+    await loadAllData();
+    hideLoading();
+    showAppView();
+  } catch(err) {
+    console.error('initAuth error:', err);
+    hideLoading();
+    showLoginView();
+  }
 }
-var wB=[
-  {cx:.30,cy:.55,tx:.30,ty:.55,xf:.00013,xp:0,yf:.00010,yp:1.40,r:1.05,sp:.07,s:[{t:0,c:'rgba(18,16,138,1)'},{t:.45,c:'rgba(20,18,145,.75)'},{t:.8,c:'rgba(22,20,150,.28)'},{t:1,c:'rgba(18,16,138,0)'}]},
-  {cx:.60,cy:.45,tx:.60,ty:.45,xf:.00028,xp:2.10,yf:.00022,yp:3.30,r:.80,sp:.13,s:[{t:0,c:'rgba(62,26,140,1)'},{t:.4,c:'rgba(65,28,145,.8)'},{t:.75,c:'rgba(68,30,148,.32)'},{t:1,c:'rgba(62,26,140,0)'}]},
-  {cx:.50,cy:.50,tx:.50,ty:.50,xf:.00018,xp:4.50,yf:.00015,yp:.60,r:.90,sp:.09,s:[{t:0,c:'rgba(30,45,184,1)'},{t:.45,c:'rgba(32,48,188,.7)'},{t:.8,c:'rgba(35,52,192,.28)'},{t:1,c:'rgba(30,45,184,0)'}]},
-  {cx:.70,cy:.30,tx:.70,ty:.30,xf:.00044,xp:5.60,yf:.00038,yp:2.20,r:.42,sp:.20,s:[{t:0,c:'rgba(120,175,245,1)'},{t:.28,c:'rgba(115,168,238,.82)'},{t:.65,c:'rgba(108,160,230,.4)'},{t:1,c:'rgba(120,175,245,0)'}]}
-];
-function wOsc(f,p){return(Math.sin(wT*f*Math.PI*2+p)+1)*.5;}
-function drawW(){
-  wT++;wCtx.clearRect(0,0,wW,wH);
-  wCtx.globalCompositeOperation='source-over';
-  wCtx.font='800 '+wFS+'px Urbanist,sans-serif';
-  wCtx.fillStyle='#080d30';wCtx.fillText('Welcome',wPX,wPY+wFS*.88);
-  wCtx.globalCompositeOperation='source-atop';
-  wB.forEach(function(b){
-    b.tx=.04+wOsc(b.xf,b.xp)*.92;b.ty=.04+wOsc(b.yf,b.yp)*.92;
-    b.cx+=(b.tx-b.cx)*b.sp;b.cy+=(b.ty-b.cy)*b.sp;
-    var g=wCtx.createRadialGradient(b.cx*wW,b.cy*wH,0,b.cx*wW,b.cy*wH,Math.max(wW,wH)*b.r);
-    b.s.forEach(function(s){g.addColorStop(s.t,s.c);});wCtx.fillStyle=g;wCtx.fillRect(0,0,wW,wH);
+
+function showAppView() {
+  document.getElementById('view-login-page').style.display = 'none';
+  document.getElementById('view-app').style.display = 'block';
+}
+
+function showLoginView() {
+  document.getElementById('view-login-page').style.display = 'block';
+  document.getElementById('view-app').style.display = 'none';
+}
+
+function updateUserUI(user) {
+  const name = user.user_metadata?.full_name || user.email.split('@')[0];
+  const email = user.email;
+  const initial = name.charAt(0).toUpperCase();
+  document.getElementById('user-avatar').textContent = initial;
+  document.getElementById('user-name').textContent = name;
+  document.getElementById('user-email').textContent = email;
+}
+
+window.doSignOut = async function() {
+  await sb.auth.signOut();
+  currentUser = null;
+  projects = [];
+  hideLoading();
+  showLoginView();
+};
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+let toastTimer = null;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  const icon = document.getElementById('toast-icon');
+  document.getElementById('toast-msg').textContent = msg;
+  icon.className = `toast-icon ${type}`;
+  icon.innerHTML = type === 'success' ? '<i class="fas fa-check"></i>' : type === 'error' ? '<i class="fas fa-times"></i>' : '<i class="fas fa-cloud-upload-alt"></i>';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ═══════════════════════════════════════════
+   LOADING
+═══════════════════════════════════════════ */
+function showLoading(msg) {
+  document.getElementById('loading-text').textContent = msg || '載入中…';
+  document.getElementById('loading-overlay').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loading-overlay').classList.remove('show');
+}
+
+/* ═══════════════════════════════════════════
+   DATA LAYER — Supabase 替換 localStorage
+   所有 save/load 都走 Supabase
+   本機保留 fallback 快取
+═══════════════════════════════════════════ */
+let projects = [];
+let masterTags = [];
+
+async function loadAllData() {
+  try {
+    /* Load projects */
+    const { data: pData, error: pErr } = await sb
+      .from('projects')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (pErr) throw pErr;
+
+    projects = (pData || []).map(row => row.data);
+    projects.forEach(p => {
+      if (!p.shortId) p.shortId = generateId();
+      if (!p.tags) p.tags = [];
+      if (!p.memo) p.memo = '';
+    });
+
+    /* Load tags */
+    const { data: tData } = await sb
+      .from('tags')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .single();
+
+    masterTags = tData?.tags || ['春節', '端午', '中秋', '母親節', '週年慶'];
+
+    /* Seed default project if empty AND no localStorage backup exists */
+    if (projects.length === 0) {
+      var lsBackup = JSON.parse(localStorage.getItem('yuxitang_projects_v49') || '[]');
+      if (lsBackup.length > 0) {
+        /* Migrate from localStorage to Supabase */
+        projects = lsBackup;
+        projects.forEach(function(p) {
+          if (!p.shortId) p.shortId = generateId();
+          if (!p.tags) p.tags = [];
+          if (!p.memo) p.memo = '';
+        });
+        showToast('從本機備援恢復 ' + projects.length + ' 個專案', 'saving');
+        await saveProjectsToCloud();
+      } else {
+        var def = createDefaultProject('2026春節檔期', '2025', '2026', ['春節']);
+        projects.push(def);
+        await saveProjectsToCloud();
+      }
+    }
+
+    renderHubFilters();
+    renderHub();
+  } catch (err) {
+    console.error('Load error:', err);
+    showToast('雲端載入失敗，使用本機資料', 'error');
+    /* Fallback to localStorage */
+    try {
+      projects = JSON.parse(localStorage.getItem('yuxitang_projects_v49') || '[]');
+      masterTags = JSON.parse(localStorage.getItem('yuxitang_tags_v49') || '["春節","端午","中秋","母親節","週年慶"]');
+    } catch(e) {
+      projects = []; masterTags = ['春節','端午','中秋','母親節','週年慶'];
+    }
+    renderHubFilters();
+    renderHub();
+    hideLoading();
+  }
+}
+
+/* Save all projects to Supabase (upsert per project id) */
+let saveDebounceTimer = null;
+function saveProjects() {
+  /* Optimistic local update */
+  localStorage.setItem('yuxitang_projects_v49', JSON.stringify(projects));
+  /* Debounce cloud save 600ms */
+  clearTimeout(saveDebounceTimer);
+  saveDebounceTimer = setTimeout(saveProjectsToCloud, 600);
+}
+
+async function saveProjectsToCloud() {
+  if (!currentUser) return;
+  try {
+    /* Upsert each project as a row: { id, user_id, data } */
+    const rows = projects.map(p => ({
+      id: p.id,
+      user_id: currentUser.id,
+      data: p,
+      updated_at: new Date().toISOString()
+    }));
+
+    if (rows.length === 0) return;
+
+    const { error } = await sb.from('projects').upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+    showToast('已同步至雲端', 'saving');
+  } catch (err) {
+    console.error('Save error:', err);
+    showToast('雲端同步失敗', 'error');
+  }
+}
+
+async function saveTags() {
+  localStorage.setItem('yuxitang_tags_v49', JSON.stringify(masterTags));
+  if (!currentUser) return;
+  try {
+    await sb.from('tags').upsert({
+      user_id: currentUser.id,
+      tags: masterTags,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+  } catch (err) {
+    console.error('Tags save error:', err);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   APP LOGIC (V49 原有邏輯，完整保留)
+═══════════════════════════════════════════ */
+const SECTION_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#0ea5e9','#84cc16','#eab308','#d946ef','#14b8a6','#6366f1','#ec4899','#f97316','#06b6d4','#64748b'];
+
+let appState = { view: 'hub', currentProjectId: null };
+
+function generateId() { return 'PRJ-' + Math.random().toString(36).substr(2, 5).toUpperCase(); }
+
+function createDefaultProject(title, ly, ty, tags = []) {
+  return {
+    id: Date.now().toString(), shortId: generateId(),
+    title, ly, ty, tags, memo: '',
+    sections: [{
+      title: '$1,200 - $1,500 核心主力區間', collapsed: false,
+      lyItems: [{ name: '冠璽御禮', qty: 2100, revenue: 2060100 }],
+      tyItems: [{ name: '冠璽御禮', pQty: 2000, pRev: 3000000, aQty: 3100, aRev: 4650000 }]
+    }]
+  };
+}
+
+document.getElementById('current-date').innerText = new Date().toLocaleDateString();
+
+const fmtMoney = n => '$' + n.toLocaleString();
+const fmtK = n => n > 0 ? (n/1000).toFixed(0) + 'k' : '0';
+const fmtPct = n => (n > 0 ? '+' : '') + n.toFixed(1) + '%';
+const fmtDiffMoney = n => (n >= 0 ? '+' : '-') + '$' + Math.abs(n).toLocaleString();
+const fmtDiffQty = n => (n >= 0 ? '+' : '-') + Math.abs(n).toLocaleString() + ' 盒';
+function formatValue(val) { return val ? Number(val).toLocaleString() : ''; }
+
+/* Theme */
+let isDarkMode = localStorage.getItem('yuxitang_theme') === 'dark';
+if (isDarkMode) document.documentElement.setAttribute('data-theme', 'dark');
+
+function updateThemeBtnText() {
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.innerHTML = isDarkMode
+      ? '<i class="fas fa-sun"></i><span class="nav-label"> 切換淺色模式</span>'
+      : '<i class="fas fa-moon"></i><span class="nav-label"> 切換深色模式</span>';
   });
-  wCtx.globalCompositeOperation='source-over';
-  if(wRun)requestAnimationFrame(drawW);
 }
-var lCvs=document.getElementById('left-canvas'),lCtx=lCvs.getContext('2d');
-var lRun=false,lT=0;
-function setupL(){
-  var p=lCvs.parentElement,pw=p.offsetWidth,ph=p.offsetHeight;
-  lCvs.width=Math.ceil(pw*dpr);lCvs.height=Math.ceil(ph*dpr);
-  lCvs.style.width=pw+'px';lCvs.style.height=ph+'px';
-  lCtx.scale(dpr,dpr);
+updateThemeBtnText();
+
+window.toggleTheme = function() {
+  isDarkMode = !isDarkMode;
+  isDarkMode ? document.documentElement.setAttribute('data-theme','dark') : document.documentElement.removeAttribute('data-theme');
+  localStorage.setItem('yuxitang_theme', isDarkMode ? 'dark' : 'light');
+  updateThemeBtnText();
+  if (appState.view === 'detail') window.updateCharts();
+};
+
+function getChartColors() {
+  return isDarkMode ? { grid: '#1e3060', text: '#8898be' } : { grid: '#e2e8f0', text: '#6878aa' };
 }
-var lB=[
-  {cx:.20,cy:.72,tx:.20,ty:.72,xf:.000042,xp:0,yf:.000033,yp:1.50,r:1.10,sp:.018,s:[{t:0,c:'rgba(14,10,110,.95)'},{t:.35,c:'rgba(18,14,120,.70)'},{t:.72,c:'rgba(22,16,130,.28)'},{t:1,c:'rgba(14,10,110,0)'}]},
-  {cx:.58,cy:.42,tx:.58,ty:.42,xf:.000065,xp:1.80,yf:.000052,yp:3.10,r:.88,sp:.022,s:[{t:0,c:'rgba(58,22,135,.92)'},{t:.38,c:'rgba(65,28,145,.72)'},{t:.74,c:'rgba(70,30,150,.26)'},{t:1,c:'rgba(58,22,135,0)'}]},
-  {cx:.72,cy:.28,tx:.72,ty:.28,xf:.000050,xp:3.60,yf:.000040,yp:0.80,r:.95,sp:.020,s:[{t:0,c:'rgba(25,40,175,.90)'},{t:.40,c:'rgba(30,48,185,.68)'},{t:.78,c:'rgba(35,55,190,.24)'},{t:1,c:'rgba(25,40,175,0)'}]},
-  {cx:.62,cy:.62,tx:.62,ty:.62,xf:.000088,xp:5.20,yf:.000072,yp:2.40,r:.50,sp:.030,s:[{t:0,c:'rgba(105,165,240,.92)'},{t:.28,c:'rgba(98,158,232,.74)'},{t:.64,c:'rgba(90,150,222,.35)'},{t:1,c:'rgba(105,165,240,0)'}]},
-  {cx:.14,cy:.18,tx:.14,ty:.18,xf:.000038,xp:4.00,yf:.000030,yp:2.90,r:.82,sp:.015,s:[{t:0,c:'rgba(10,8,90,.88)'},{t:.42,c:'rgba(14,10,100,.62)'},{t:.82,c:'rgba(18,12,115,.20)'},{t:1,c:'rgba(10,8,90,0)'}]}
-];
-function lOsc(f,p){return(Math.sin(lT*f*Math.PI*2+p)+1)*.5;}
-function drawL(){
-  lT++;var lW=lCvs.width/dpr,lH=lCvs.height/dpr;
-  lCtx.clearRect(0,0,lW,lH);lCtx.fillStyle='#060920';lCtx.fillRect(0,0,lW,lH);
-  lB.forEach(function(b){
-    b.tx=.04+lOsc(b.xf,b.xp)*.92;b.ty=.04+lOsc(b.yf,b.yp)*.92;
-    b.cx+=(b.tx-b.cx)*b.sp;b.cy+=(b.ty-b.cy)*b.sp;
-    var cx=b.cx*lW,cy=b.cy*lH,r=Math.max(lW,lH)*b.r;
-    var g=lCtx.createRadialGradient(cx,cy,0,cx,cy,r);
-    b.s.forEach(function(s){g.addColorStop(s.t,s.c);});lCtx.fillStyle=g;lCtx.fillRect(0,0,lW,lH);
+
+/* Navigation */
+window.goBackToHub = function() {
+  appState.view = 'hub'; appState.currentProjectId = null;
+  document.getElementById('view-hub').style.display = 'block';
+  document.getElementById('view-detail').style.display = 'none';
+  document.getElementById('nav-hub').style.display = 'flex';
+  document.getElementById('nav-detail').style.display = 'none';
+  renderHubFilters(); renderHub();
+};
+
+window.openProject = function(id) {
+  appState.view = 'detail'; appState.currentProjectId = id;
+  document.getElementById('view-hub').style.display = 'none';
+  document.getElementById('view-detail').style.display = 'block';
+  document.getElementById('nav-hub').style.display = 'none';
+  document.getElementById('nav-detail').style.display = 'flex';
+  renderDetail();
+};
+
+window.createNewProject = function() {
+  let year = new Date().getFullYear();
+  let np = createDefaultProject(`新檔期 ${year}`, (year-1).toString(), year.toString());
+  projects.unshift(np); saveProjects(); openProject(np.id);
+};
+
+window.duplicateProject = function(id) {
+  let src = projects.find(p => p.id === id); if (!src) return;
+  let np = JSON.parse(JSON.stringify(src));
+  np.id = Date.now().toString(); np.shortId = generateId();
+  np.title = '複製 - ' + np.title;
+  np.sections.forEach(s => {
+    s.lyItems = s.tyItems.map(i => ({ name: i.name, qty: i.aQty, revenue: i.aRev }));
+    s.tyItems = s.tyItems.map(i => ({ name: i.name, pQty: 0, pRev: 0, aQty: 0, aRev: 0 }));
   });
-  if(lRun)requestAnimationFrame(drawL);
+  np.ly = (parseInt(np.ly)+1).toString(); np.ty = (parseInt(np.ty)+1).toString();
+  projects.unshift(np); saveProjects(); renderHub();
+};
+
+window.deleteCurrentProject = async function() {
+  var pid = appState.currentProjectId;
+  if (!pid) { showToast('找不到專案 ID', 'error'); return; }
+  var proj = projects.find(function(p){ return p.id === pid; });
+  var name = proj ? proj.title : '此專案';
+  var confirmed = window.confirm('確定要刪除「' + name + '」？此操作不可逆！');
+  if (!confirmed) return;
+  projects = projects.filter(function(p){ return p.id !== pid; });
+  localStorage.setItem('yuxitang_projects_v49', JSON.stringify(projects));
+  /* Delete from Supabase async (don't await, go back immediately) */
+  if (currentUser) {
+    sb.from('projects').delete().eq('id', pid).eq('user_id', currentUser.id).then(function(){});
+  }
+  showToast('「' + name + '」已刪除', 'error');
+  goBackToHub();
+};
+
+window.exportAllData = function() {
+  const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ projects, masterTags }));
+  const a = document.createElement('a');
+  a.setAttribute('href', str);
+  a.setAttribute('download', `yoosheetea_backup_${new Date().toISOString().slice(0,10)}.json`);
+  document.body.appendChild(a); a.click(); a.remove();
+};
+
+window.importData = function(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const imp = JSON.parse(e.target.result);
+      if (imp.projects && Array.isArray(imp.projects)) {
+        projects = imp.projects;
+        if (imp.masterTags) masterTags = imp.masterTags;
+        saveProjects(); await saveTags();
+        renderHubFilters(); renderHub();
+        showToast('匯入成功！', 'success');
+      } else { showToast('格式不正確', 'error'); }
+    } catch { showToast('檔案解析失敗', 'error'); }
+  };
+  reader.readAsText(file); event.target.value = '';
+};
+
+window.clearAllData = async function() {
+  if (!confirm('極度危險！清空系統內所有專案？')) return;
+  if (currentUser) {
+    await sb.from('projects').delete().eq('user_id', currentUser.id);
+  }
+  projects = []; localStorage.removeItem('yuxitang_projects_v49');
+  showToast('系統資料已清空', 'error'); renderHub();
+};
+
+window.openTagManager = function() { document.getElementById('modal-tag-manager').style.display = 'flex'; renderTagPool(); };
+window.closeTagManager = function() { document.getElementById('modal-tag-manager').style.display = 'none'; renderHubFilters(); renderHub(); if (appState.view === 'detail') renderDetail(); };
+function renderTagPool() { document.getElementById('tag-pool-list').innerHTML = masterTags.map((t,i) => `<div class="tag-item-edit">${t} <i class="fas fa-times" onclick="window.removeMasterTag(${i})"></i></div>`).join(''); }
+window.addNewTag = function() { const v = document.getElementById('new-tag-input').value.trim(); if (v && !masterTags.includes(v)) { masterTags.push(v); saveTags(); renderTagPool(); document.getElementById('new-tag-input').value = ''; } };
+window.removeMasterTag = function(idx) { const tn = masterTags[idx]; masterTags.splice(idx,1); saveTags(); projects.forEach(p => { p.tags = p.tags.filter(t => t !== tn); }); saveProjects(); renderTagPool(); };
+
+function renderHubFilters() {
+  const years = [...new Set(projects.map(p => p.ty))].sort().reverse();
+  document.getElementById('filter-year').innerHTML = `<option value="">所有年份</option>` + years.map(y => `<option value="${y}">${y} 年</option>`).join('');
+  document.getElementById('filter-tag').innerHTML = `<option value="">所有標籤</option>` + masterTags.map(t => `<option value="${t}">${t}</option>`).join('');
 }
-var rOvl=document.getElementById('ripple-overlay');
-function fireRipple(x,y,color,size){
-  var d=document.createElement('div');d.className='rip-circle';
-  d.style.cssText='left:'+x+'px;top:'+y+'px;width:'+size+'px;height:'+size+'px;background:'+color+';';
-  rOvl.appendChild(d);setTimeout(function(){d.remove();},700);
+
+window.renderHub = function() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const fy = document.getElementById('filter-year').value;
+  const ft = document.getElementById('filter-tag').value;
+
+  const grid = document.getElementById('project-grid');
+  grid.innerHTML = `
+    <div class="project-card-hub add-new-card" onclick="window.createNewProject()">
+      <i class="fas fa-plus-circle" style="font-size:32px;color:var(--primary);margin-bottom:8px"></i>
+      <h3 style="color:var(--primary);margin:0;font-weight:800">新增檔期專案</h3>
+    </div>`;
+
+  projects
+    .filter(p => {
+      const ms = p.title.toLowerCase().includes(q) || p.shortId.toLowerCase().includes(q);
+      const my = fy === '' || p.ty === fy;
+      const mt = ft === '' || p.tags.includes(ft);
+      return ms && my && mt;
+    })
+    .forEach(proj => {
+      let lyRev = 0, tyRev = 0;
+      proj.sections.forEach(s => {
+        s.lyItems.forEach(i => lyRev += (i.revenue||0));
+        s.tyItems.forEach(i => tyRev += (i.aRev||0));
+      });
+      const growth = lyRev > 0 ? ((tyRev - lyRev) / lyRev) * 100 : 0;
+      const tClass = growth >= 0 ? 'trend-text-up' : 'trend-text-down';
+      const tIcon = growth >= 0 ? '↗' : '↘';
+      const tags = proj.tags.map(t => `<span class="badge-tag">${t}</span>`).join('');
+
+      grid.innerHTML += `
+        <div class="project-card-hub" onclick="window.openProject('${proj.id}')">
+          <button class="btn-duplicate" title="複製" onclick="event.stopPropagation();window.duplicateProject('${proj.id}')"><i class="fas fa-copy"></i></button>
+          <div class="hub-card-header">
+            <div><span class="badge-id">${proj.shortId}</span><h3 class="hub-card-title">${proj.title}</h3></div>
+            <span class="hub-card-years">${proj.ly} → ${proj.ty}</span>
+          </div>
+          <div class="hub-card-tags">${tags}</div>
+          <div class="hub-card-kpi"><span class="hub-kpi-label">實際達成總營收</span><span class="hub-kpi-val">${fmtMoney(tyRev)}</span></div>
+          <div class="hub-card-kpi"><span class="hub-kpi-label">YoY 成長率</span><span class="hub-kpi-trend ${tClass}">${tIcon} ${fmtPct(growth)}</span></div>
+        </div>`;
+    });
+};
+
+let dragSrcEl = null;
+
+window.renderDetail = function() {
+  const proj = projects.find(p => p.id === appState.currentProjectId);
+  if (!proj) return;
+
+  document.getElementById('campaign-title-input').value = proj.title;
+  document.getElementById('project-id-display').innerText = proj.shortId;
+  document.getElementById('year-ly').value = proj.ly;
+  document.getElementById('year-ty').value = proj.ty;
+  document.getElementById('project-memo-input').value = proj.memo || '';
+
+  const tagsContainer = document.getElementById('project-tags-container');
+  tagsContainer.innerHTML = `<span style="font-size:12px;font-weight:700;color:var(--up);margin-right:5px"><i class="fas fa-asterisk"></i> 標籤：</span>` +
+    masterTags.map(t => `<span class="badge-tag ${proj.tags.includes(t) ? 'active' : ''}" style="cursor:pointer" onclick="window.toggleProjectTag('${t}')">${t}</span>`).join('');
+
+  const container = document.getElementById('sections-container');
+  container.innerHTML = '';
+
+  proj.sections.forEach((section, sIdx) => {
+    const color = SECTION_COLORS[sIdx % SECTION_COLORS.length];
+    const card = document.createElement('div');
+    card.className = 'card section-card hover-lift';
+    card.style.borderTopColor = color;
+    card.setAttribute('draggable', 'true');
+    card.setAttribute('data-index', sIdx);
+    card.addEventListener('dragstart', handleDragStart);
+    card.addEventListener('dragover', handleDragOver);
+    card.addEventListener('drop', handleDrop);
+    card.addEventListener('dragend', handleDragEnd);
+
+    let html = `
+      <div class="section-header">
+        <div class="header-left">
+          <i class="fas fa-grip-vertical drag-handle"></i>
+          <input type="text" class="title-input" value="${section.title}" style="color:${color}" onchange="window.updateSectionTitle(${sIdx},this.value)">
+        </div>
+        <div class="header-controls">
+          <button class="btn-control" onclick="window.toggleSection(${sIdx})"><i class="fas fa-chevron-up ${section.collapsed ? 'fa-rotate-180' : ''}"></i></button>
+          <button class="btn-control btn-delete-section" onclick="window.removeSection(${sIdx})"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      </div>
+      <div class="section-body ${section.collapsed ? 'collapsed' : ''}">
+        <div class="card-content">
+          <div class="three-col-grid">
+            <div class="col-panel col-border-right">
+              <span class="side-title">${proj.ly} 實績 (Benchmark)</span>
+              <table class="pro-table">
+                <thead><tr><th style="width:40%">品名</th><th>實際銷量/營收</th></tr></thead>
+                <tbody>`;
+
+    section.lyItems.forEach((item, iIdx) => {
+      html += `<tr>
+        <td><div class="input-group-name"><input class="clean-input text-left" value="${item.name}" onchange="window.updateItem(${sIdx},'ly',${iIdx},'name',this.value)" placeholder="商品名稱"></div></td>
+        <td style="position:relative;padding-right:38px !important">
+          <div class="input-row"><div class="sys-dot sys-dot-b">盒</div><div class="input-group-actual"><i class="fas fa-box"></i><input class="clean-input" type="text" value="${formatValue(item.qty)}" oninput="window.handleInput(this,${sIdx},'ly',${iIdx},'qty')"></div></div>
+          <div class="input-row"><div class="sys-dot sys-dot-g">額</div><div class="input-group-actual"><span class="inner-icon-dollar">$</span><input class="clean-input" type="text" value="${formatValue(item.revenue)}" oninput="window.handleInput(this,${sIdx},'ly',${iIdx},'revenue')"></div></div>
+          <button class="row-remove-btn" onclick="window.removeItem(${sIdx},'ly',${iIdx})"><i class="fas fa-times"></i></button>
+        </td>
+      </tr>`;
+    });
+
+    html += `</tbody></table><button class="btn-ghost" onclick="window.addItem(${sIdx},'ly')">+ 新增去年品項</button></div>
+            <div class="col-panel col-border-right">
+              <span class="side-title" style="color:${color}">${proj.ty} 戰況 (Active)</span>
+              <table class="pro-table">
+                <thead><tr><th style="width:28%">品名</th><th class="th-plan" style="width:36%">預計</th><th class="th-actual" style="width:36%">實際</th></tr></thead>
+                <tbody>`;
+
+    section.tyItems.forEach((item, iIdx) => {
+      html += `<tr>
+        <td><div class="input-group-name"><input class="clean-input text-left" value="${item.name}" onchange="window.updateItem(${sIdx},'ty',${iIdx},'name',this.value)" placeholder="商品名稱"></div></td>
+        <td class="col-plan">
+          <div class="input-row"><div class="sys-dot sys-dot-b">盒</div><div class="input-group-plan"><i class="fas fa-box"></i><input class="clean-input" style="color:#94a3b8" type="text" value="${formatValue(item.pQty)}" oninput="window.handleInput(this,${sIdx},'ty',${iIdx},'pQty')"></div></div>
+          <div class="input-row"><div class="sys-dot sys-dot-g">額</div><div class="input-group-plan"><span class="inner-icon-dollar">$</span><input class="clean-input" style="color:#94a3b8" type="text" value="${formatValue(item.pRev)}" oninput="window.handleInput(this,${sIdx},'ty',${iIdx},'pRev')"></div></div>
+        </td>
+        <td class="col-actual" style="position:relative;padding-right:38px !important">
+          <div class="input-row"><div class="sys-dot sys-dot-b">盒</div><div class="input-group-actual"><i class="fas fa-box"></i><input class="clean-input" type="text" value="${formatValue(item.aQty)}" oninput="window.handleInput(this,${sIdx},'ty',${iIdx},'aQty')"></div></div>
+          <div class="input-row"><div class="sys-dot sys-dot-g">額</div><div class="input-group-actual"><span class="inner-icon-dollar">$</span><input class="clean-input" type="text" value="${formatValue(item.aRev)}" oninput="window.handleInput(this,${sIdx},'ty',${iIdx},'aRev')"></div></div>
+          <button class="row-remove-btn" onclick="window.removeItem(${sIdx},'ty',${iIdx})"><i class="fas fa-times"></i></button>
+        </td>
+      </tr>`;
+    });
+
+    html += `</tbody></table><button class="btn-ghost" onclick="window.addItem(${sIdx},'ty')">+ 新增今年品項</button></div>
+            <div class="col-panel col-kpi-sidebar" id="side-kpi-container-${sIdx}">
+              ${createSectionSideHTML(sIdx, proj)}
+            </div>
+          </div>
+        </div>
+      </div>`;
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+
+  /* ── Tech Debt Fix #2: 分離「存在」與「需更新」邏輯 ── */
+  initTotalBoardHTML();
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      proj.sections.forEach((section, sIdx) => {
+        updateSectionDOM(sIdx, calculateSectionKPIs(section));
+      });
+      updateTotalDOM(proj);
+      window.updateCharts();
+    });
+  });
+};
+
+window.handleInput = function(el, sIdx, side, iIdx, field) {
+  const proj = projects.find(p => p.id === appState.currentProjectId);
+  const raw = el.value.replace(/,/g, '');
+  const list = side === 'ly' ? proj.sections[sIdx].lyItems : proj.sections[sIdx].tyItems;
+  list[iIdx][field] = raw === '' ? 0 : parseFloat(raw);
+  if (raw !== '') el.value = Number(raw).toLocaleString();
+  saveProjects();
+  updateSectionDOM(sIdx, calculateSectionKPIs(proj.sections[sIdx]));
+  updateTotalDOM(proj);
+  window.updateCharts();
+};
+
+function calculateSectionKPIs(s) {
+  let lyRev=0,lyQty=0,tyRev=0,tyQty=0,planRev=0,planQty=0;
+  s.lyItems.forEach(i=>{lyRev+=(i.revenue||0);lyQty+=(i.qty||0);});
+  s.tyItems.forEach(i=>{tyRev+=(i.aRev||0);tyQty+=(i.aQty||0);planRev+=(i.pRev||0);planQty+=(i.pQty||0);});
+  const revGap=tyRev-lyRev,qtyGap=tyQty-lyQty;
+  return {
+    lyRev,tyRev,lyQty,tyQty,planRev,planQty,revGap,qtyGap,
+    revGrowth: lyRev>0?((revGap/lyRev)*100):0,
+    volGrowth: lyQty>0?((qtyGap/lyQty)*100):0,
+    revAchieve: planRev>0?Math.round((tyRev/planRev)*100):0,
+    volAchieve: planQty>0?Math.round((tyQty/planQty)*100):0
+  };
 }
-function showLogin(){
-  var wp=document.getElementById('page-welcome'),lp=document.getElementById('page-login');
-  wp.classList.add('out-left');
-  setTimeout(function(){
-    wp.classList.add('hidden');lp.classList.remove('hidden','slide-right');
-    var card=document.getElementById('split-card');
-    card.style.animation='none';card.offsetHeight;card.style.animation='';
-    if(!lRun){setupL();lRun=true;requestAnimationFrame(drawL);}
-  },420);
+
+function createSectionSideHTML(sIdx, proj) {
+  const gR = 'gR_'+sIdx, gV = 'gV_'+sIdx;
+  return `
+    <div class="side-kpi-card">
+      <div class="side-kpi-header"><i class="fas fa-sack-dollar" style="color:var(--primary)"></i> 營收對比</div>
+      <div class="sk-body">
+        <div class="sk-box" style="background:transparent;border:none;padding:0">
+          <div class="sk-chart-wrapper">
+            <div class="sk-chart-bg"><div class="sk-grid-line"></div><div class="sk-grid-line"></div><div class="sk-grid-line"></div></div>
+            <div class="mc-row"><div class="mc-year">${proj.ly}</div><div class="mc-bar-track"><div id="sk-rev-ly-bar-${sIdx}" class="mc-bar ly" style="width:0%"></div></div><div class="mc-val" id="sk-rev-ly-val-${sIdx}">0k</div></div>
+            <div class="mc-row" style="margin-bottom:0"><div class="mc-year">${proj.ty}</div><div class="mc-bar-track"><div id="sk-rev-ty-bar-${sIdx}" class="mc-bar ty" style="width:0%"></div></div><div class="mc-val" id="sk-rev-ty-val-${sIdx}">0k</div></div>
+          </div>
+        </div>
+        <div class="sk-box" style="align-items:center;background:transparent;border:none;padding:0">
+          <div class="sk-data-title">${proj.ty}年度營收</div>
+          <div class="sk-data-main" id="sk-rev-total-${sIdx}">$0</div>
+          <div class="sk-data-trend">
+            <span id="sk-rev-diff-${sIdx}" class="sk-data-diff trend-text-up">+$0</span>
+            <span id="sk-rev-pill-${sIdx}" class="trend-pill trend-bg-up">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="side-kpi-card">
+      <div class="side-kpi-header"><i class="fas fa-boxes-stacked" style="color:var(--ty-green)"></i> 銷量對比</div>
+      <div class="sk-body">
+        <div class="sk-box" style="background:transparent;border:none;padding:0">
+          <div class="sk-chart-wrapper">
+            <div class="sk-chart-bg"><div class="sk-grid-line"></div><div class="sk-grid-line"></div><div class="sk-grid-line"></div></div>
+            <div class="mc-row"><div class="mc-year">${proj.ly}</div><div class="mc-bar-track"><div id="sk-vol-ly-bar-${sIdx}" class="mc-bar ly" style="width:0%"></div></div><div class="mc-val" id="sk-vol-ly-val-${sIdx}">0</div></div>
+            <div class="mc-row" style="margin-bottom:0"><div class="mc-year">${proj.ty}</div><div class="mc-bar-track"><div id="sk-vol-ty-bar-${sIdx}" class="mc-bar ty" style="width:0%"></div></div><div class="mc-val" id="sk-vol-ty-val-${sIdx}">0</div></div>
+          </div>
+        </div>
+        <div class="sk-box" style="align-items:center;background:transparent;border:none;padding:0">
+          <div class="sk-data-title">${proj.ty}年度銷量</div>
+          <div class="sk-data-main" id="sk-vol-total-${sIdx}">0</div>
+          <div class="sk-data-trend">
+            <span id="sk-vol-diff-${sIdx}" class="sk-data-diff trend-text-up">+0</span>
+            <span id="sk-vol-pill-${sIdx}" class="trend-pill trend-bg-up">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="side-kpi-card">
+      <div class="side-kpi-header"><i class="fas fa-bullseye" style="color:var(--gold)"></i> 達成率</div>
+      <div class="sk-body">
+        <div class="sk-box" style="background:transparent;border:none;padding:0;gap:8px">
+          <div class="sk-data-title" style="margin-bottom:0">${proj.ty}營收達成率</div>
+          ${buildRingSVG(sIdx,'rev')}
+        </div>
+        <div class="sk-box" style="background:transparent;border:none;padding:0;gap:8px">
+          <div class="sk-data-title" style="margin-bottom:0">${proj.ty}銷量達成率</div>
+          ${buildRingSVG(sIdx,'vol')}
+        </div>
+      </div>
+    </div>`;
 }
-function showWelcome(){
-  var lp=document.getElementById('page-login'),wp=document.getElementById('page-welcome');
-  lp.classList.add('slide-right');
-  setTimeout(function(){lp.classList.add('hidden');lp.classList.remove('slide-right');wp.classList.remove('hidden','out-left');},400);
+
+/* Ring colour map — used by buildRingSVG and updateRing */
+var RING_COLORS = {
+  rev: { start: '#34d399', end: '#047857', dot: '#047857' },
+  vol: { start: '#fcd34d', end: '#b45309', dot: '#b45309' }
+};
+
+function buildRingSVG(sIdx, type) {
+  var col = RING_COLORS[type];
+  return `
+    <div class="ring-canvas-wrap" id="ring-wrap-${type}-${sIdx}">
+      <canvas id="ring-canvas-${type}-${sIdx}" width="110" height="110"></canvas>
+      <div class="ring-dot-cap" id="ring-dot-${type}-${sIdx}" style="transform:rotate(0deg)">
+      </div>
+      <div class="ring-text-content">
+        <span id="ring-${type}-val-${sIdx}" class="sk-circle-val">0%</span>
+        <span class="sk-circle-lbl">達成率</span>
+      </div>
+    </div>`;
 }
-document.getElementById('btn-enter').addEventListener('click',function(e){
-  fireRipple(e.clientX,e.clientY,'rgba(255,255,255,0.5)',320);
-  setTimeout(showLogin,120);
+
+function updateSectionDOM(sIdx, k) {
+  const tBox = n => n>=0 ? 'trend-bg-up' : 'trend-bg-down';
+  const tTxt = n => n>=0 ? 'trend-text-up' : 'trend-text-down';
+  const tIco = n => n>=0 ? '↗' : '↘';
+  const maxR = Math.max(k.lyRev,k.tyRev)||1, scR = maxR*1.25;
+  const maxQ = Math.max(k.lyQty,k.tyQty)||1, scQ = maxQ*1.25;
+  const $= (id,fn) => { const e=document.getElementById(id); if(e) fn(e); };
+  $(`sk-rev-ly-val-${sIdx}`, e=>e.innerText=fmtK(k.lyRev));
+  $(`sk-rev-ly-bar-${sIdx}`, e=>e.style.width=Math.max((k.lyRev/scR)*100,2)+'%');
+  $(`sk-rev-ty-val-${sIdx}`, e=>e.innerText=fmtK(k.tyRev));
+  $(`sk-rev-ty-bar-${sIdx}`, e=>e.style.width=Math.max((k.tyRev/scR)*100,2)+'%');
+  $(`sk-rev-total-${sIdx}`, e=>e.innerText=fmtMoney(k.tyRev));
+  $(`sk-rev-diff-${sIdx}`, e=>{e.innerText=fmtDiffMoney(k.revGap);e.className=`sk-data-diff ${tTxt(k.revGrowth)}`;});
+  $(`sk-rev-pill-${sIdx}`, e=>{e.innerHTML=`${tIco(k.revGrowth)} ${fmtPct(k.revGrowth)}`;e.className=`trend-pill ${tBox(k.revGrowth)}`;});
+  $(`sk-vol-ly-val-${sIdx}`, e=>e.innerText=k.lyQty.toLocaleString());
+  $(`sk-vol-ly-bar-${sIdx}`, e=>e.style.width=Math.max((k.lyQty/scQ)*100,2)+'%');
+  $(`sk-vol-ty-val-${sIdx}`, e=>e.innerText=k.tyQty.toLocaleString());
+  $(`sk-vol-ty-bar-${sIdx}`, e=>e.style.width=Math.max((k.tyQty/scQ)*100,2)+'%');
+  $(`sk-vol-total-${sIdx}`, e=>e.innerText=k.tyQty.toLocaleString());
+  $(`sk-vol-diff-${sIdx}`, e=>{e.innerText=fmtDiffQty(k.qtyGap);e.className=`sk-data-diff ${tTxt(k.volGrowth)}`;});
+  $(`sk-vol-pill-${sIdx}`, e=>{e.innerHTML=`${tIco(k.volGrowth)} ${fmtPct(k.volGrowth)}`;e.className=`trend-pill ${tBox(k.volGrowth)}`;});
+  updateRing(sIdx,'rev',k.revAchieve);
+  updateRing(sIdx,'vol',k.volAchieve);
+}
+
+/* ── Apple Ring — canvas + rotating dot cap technique ──
+   Inspired by codepen dot approach: dot element rotates
+   alongside the arc, giving precise head/tail positioning.
+   Canvas draws track + gradient arc. ── */
+function updateRing(sIdx, type, pct) {
+  var valEl = document.getElementById('ring-'+type+'-val-'+sIdx);
+  if (valEl) valEl.innerText = pct + '%';
+
+  var canvas = document.getElementById('ring-canvas-'+type+'-'+sIdx);
+  if (!canvas) return;
+  var ctx2 = canvas.getContext('2d');
+  var dpr2 = window.devicePixelRatio || 1;
+  var size = 110;
+
+  /* Resize for retina */
+  if (canvas.width !== size * dpr2) {
+    canvas.width  = size * dpr2;
+    canvas.height = size * dpr2;
+    canvas.style.width  = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx2.scale(dpr2, dpr2);
+  }
+
+  ctx2.clearRect(0, 0, size, size);
+
+  var cx2 = size / 2, cy2 = size / 2;
+  var r2  = 42, sw = 13;
+  var startAngle = -Math.PI / 2; /* 12 o'clock */
+
+  /* Track */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2, r2, 0, 2 * Math.PI);
+  ctx2.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx2.lineWidth = sw;
+  ctx2.stroke();
+
+  if (pct <= 0) return;
+
+  var col  = RING_COLORS[type];
+  var draw = Math.min(pct, 200) / 100; /* up to 2 full laps */
+  var endAngle = startAngle + draw * 2 * Math.PI;
+
+  /* Gradient: create along the arc direction */
+  var grad2 = ctx2.createLinearGradient(cx2, cy2 - r2, cx2, cy2 + r2);
+  grad2.addColorStop(0, col.start);
+  grad2.addColorStop(1, col.end);
+
+  /* Draw start cap (round) */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2 - r2, sw/2 - 1, 0, 2*Math.PI);
+  ctx2.fillStyle = col.start;
+  ctx2.fill();
+
+  /* Draw arc */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2, r2, startAngle, endAngle);
+  ctx2.strokeStyle = grad2;
+  ctx2.lineWidth = sw;
+  ctx2.lineCap = 'butt';
+  ctx2.stroke();
+
+  /* Dot cap — rotating div handles the end cap */
+  var dot = document.getElementById('ring-dot-'+type+'-'+sIdx);
+  if (dot) {
+    var deg = (pct / 100) * 360;
+    dot.style.transform = 'rotate(' + deg + 'deg)';
+    dot.style.setProperty('--dot-color', col.dot);
+    /* Set dot ::after color via inline style trick */
+    if (!dot._styleSet) {
+      dot._styleSet = true;
+      dot.style.cssText += '; --dot-color: ' + col.dot;
+      /* Inject style for this specific dot */
+      var styleId = 'dot-style-'+type+'-'+sIdx;
+      if (!document.getElementById(styleId)) {
+        var s = document.createElement('style');
+        s.id = styleId;
+        s.textContent = '#ring-dot-'+type+'-'+sIdx+'::after { background: '+col.dot+' !important; }';
+        document.head.appendChild(s);
+      }
+    }
+  }
+}
+
+/* Gauge semicircle for achievement rate */
+function drawAchieveRing(pct) {
+  var canvas = document.getElementById('tot-achieve-canvas');
+  if (!canvas) return;
+  var ctx2 = canvas.getContext('2d');
+  var dpr2 = window.devicePixelRatio || 1;
+  var W = 220, H = 120;
+
+  canvas.width  = W * dpr2; canvas.height = H * dpr2;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx2.scale(dpr2, dpr2);
+  ctx2.clearRect(0, 0, W, H);
+
+  var cx2 = W / 2, cy2 = H - 10;
+  var r2 = 92, sw = 18;
+  var startA = Math.PI;       /* 9 o'clock (left) */
+  var endA   = 2 * Math.PI;  /* 3 o'clock (right) */
+
+  /* Track (grey semicircle) */
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2, r2, startA, endA);
+  ctx2.strokeStyle = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+  ctx2.lineWidth = sw;
+  ctx2.lineCap = 'round';
+  ctx2.stroke();
+
+  if (pct <= 0) {
+    /* Needle at far left */
+    var needle = document.getElementById('tot-achieve-needle');
+    if (needle) needle.style.transform = 'rotate(-90deg)';
+    return;
+  }
+
+  /* Clamp for display — show up to 200% but needle maxes at edge */
+  var fillPct = Math.min(pct, 200);
+  var fillRatio = fillPct / 100; /* 0–2 */
+  var arcSpan = Math.PI; /* semicircle = π radians */
+  var fillEnd = startA + (fillRatio / 2) * arcSpan; /* /2 because max is 200% */
+  fillEnd = Math.min(fillEnd, endA); /* cap at right edge */
+
+  /* Gradient: green for ≤100%, gold for >100% */
+  var g;
+  if (pct <= 100) {
+    g = ctx2.createLinearGradient(cx2 - r2, cy2, cx2 + r2, cy2);
+    g.addColorStop(0, '#6ee7b7');
+    g.addColorStop(1, '#059669');
+  } else {
+    g = ctx2.createLinearGradient(cx2 - r2, cy2, cx2 + r2, cy2);
+    g.addColorStop(0, '#fde68a');
+    g.addColorStop(1, '#f59e0b');
+  }
+
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2, r2, startA, fillEnd);
+  ctx2.strokeStyle = g;
+  ctx2.lineWidth = sw;
+  ctx2.lineCap = 'round';
+  ctx2.stroke();
+
+  /* Needle rotation: -90deg = 0%, 0deg = 50%(100%), +90deg = 100%(200%) */
+  var needleDeg = -90 + (fillRatio / 2) * 180;
+  needleDeg = Math.max(-90, Math.min(90, needleDeg));
+  var needle = document.getElementById('tot-achieve-needle');
+  if (needle) needle.style.transform = 'rotate(' + needleDeg + 'deg)';
+
+  /* Update text colour */
+  var txt = document.getElementById('tot-achieve-txt');
+  if (txt) txt.className = 'gauge-pct' + (pct > 100 ? ' over' : '');
+}
+
+/* ── Tech Debt Fix #2: initTotalBoard 分離 DOM 存在與資料更新 ── */
+function initTotalBoardHTML() {
+  const container = document.getElementById('kpi-wireframe-container');
+  /* 只在 DOM 不存在時才建立結構，不因 theme 切換而重建 */
+  if (container.querySelector('.wf-card')) return;
+
+  container.innerHTML = `
+    <div class="wf-card hover-lift">
+      <div class="wf-card-header"><i class="fas fa-sack-dollar" style="color:var(--primary)"></i> 營收成長對比</div>
+      <div class="wf-top-row">
+        <div class="wf-stat"><div class="wf-stat-label" id="tot-ly-stat-lbl">LY 總實際營收</div><div class="wf-stat-val-ly" id="tot-ly-rev-val">$0</div></div>
+        <div class="wf-divider"></div>
+        <div class="wf-stat"><div class="wf-stat-label" id="tot-ty-stat-lbl">TY 總實際營收</div><div class="wf-stat-val" id="tot-ty-rev-val">$0</div></div>
+      </div>
+      <div class="wf-bottom-row">
+        <div class="wf-mini-chart-box">
+          <div class="wf-mc-title">銷售額對比</div>
+          <div class="wf-mc-area">
+            <div class="wf-mc-graph">
+              <div class="wf-mc-grid"><div class="wf-mc-grid-line"></div><div class="wf-mc-grid-line"></div><div class="wf-mc-grid-line" style="border:none"></div></div>
+              <div class="wf-mc-bar-col">
+                <div class="wf-mc-bar-wrapper" id="tot-ly-bar-wrap" style="height:0%">
+                  <span class="wf-mc-bar-value" id="tot-ly-bar-val">0k</span>
+                  <div class="wf-bar ly"></div>
+                </div>
+                <span class="wf-mc-lbl" id="tot-ly-lbl">LY</span>
+              </div>
+              <div class="wf-mc-bar-col">
+                <div class="wf-mc-bar-wrapper" id="tot-ty-bar-wrap" style="height:0%">
+                  <span class="wf-mc-bar-value" id="tot-ty-bar-val">0k</span>
+                  <div class="wf-bar ty"></div>
+                </div>
+                <span class="wf-mc-lbl" id="tot-ty-lbl">TY</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="wf-growth-box">
+          <div class="wf-growth-lbl">營收成長幅度</div>
+          <div class="wf-growth-pct">
+            <span id="tot-rev-growth-val">0%</span>
+            <span id="tot-rev-pill" class="trend-pill trend-bg-up">↗</span>
+          </div>
+          <div id="tot-rev-diff" class="wf-growth-diff trend-text-up">+$0</div>
+        </div>
+      </div>
+    </div>
+    <div class="wf-card hover-lift">
+      <div class="wf-card-header"><i class="fas fa-bullseye" style="color:var(--gold)"></i> 業績目標達成率</div>
+      <div class="wf-top-row">
+        <div class="wf-stat"><div class="wf-stat-label" id="tot-plan-lbl">TY 預估營收</div><div class="wf-stat-val-ly" id="tot-plan-rev-val">$0</div></div>
+        <div class="wf-divider"></div>
+        <div class="wf-stat"><div class="wf-stat-label" id="tot-act-lbl">TY 總實際營收</div><div class="wf-stat-val" id="tot-act-rev-val">$0</div></div>
+      </div>
+      <div class="wf-bottom-row" style="align-items:center;justify-content:center;padding:12px 0 0">
+        <div class="wf-achieve-box" style="gap:0">
+          <div class="gauge-wrap">
+            <canvas id="tot-achieve-canvas" width="220" height="120"></canvas>
+            <div class="gauge-needle" id="tot-achieve-needle" style="transform:rotate(-90deg)"></div>
+            <div class="gauge-center-text">
+              <div class="gauge-pct" id="tot-achieve-txt">0%</div>
+              <div class="gauge-lbl">目標達成率</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function updateTotalDOM(proj) {
+  let lyRev=0,planRev=0,actRev=0;
+  proj.sections.forEach(s=>{
+    s.lyItems.forEach(i=>lyRev+=(i.revenue||0));
+    s.tyItems.forEach(i=>{planRev+=(i.pRev||0);actRev+=(i.aRev||0);});
+  });
+  const gr = lyRev>0?((actRev-lyRev)/lyRev)*100:0;
+  const diff = actRev-lyRev;
+  const ach = planRev>0?Math.round((actRev/planRev)*100):0;
+  const sc = Math.ceil(Math.max(lyRev,actRev)/10000)*10000||100000;
+  const chartSc = sc*1.25;
+  const $=(id,fn)=>{const e=document.getElementById(id);if(e)fn(e);};
+  $('tot-ly-rev-val', e=>e.innerText=fmtMoney(lyRev));
+  $('tot-ty-rev-val', e=>e.innerText=fmtMoney(actRev));
+  $('tot-ly-bar-wrap', e=>e.style.height=Math.max((lyRev/chartSc)*100,2)+'%');
+  $('tot-ly-bar-val', e=>e.innerText=fmtK(lyRev));
+  $('tot-ty-bar-wrap', e=>e.style.height=Math.max((actRev/chartSc)*100,2)+'%');
+  $('tot-ty-bar-val', e=>e.innerText=fmtK(actRev));
+  $('tot-rev-growth-val', e=>e.innerText=fmtPct(gr));
+  $('tot-rev-pill', e=>{e.className=`trend-pill ${gr>=0?'trend-bg-up':'trend-bg-down'}`;e.innerHTML=gr>=0?'↗':'↘';});
+  $('tot-rev-diff', e=>{e.innerText=fmtDiffMoney(diff);e.className=`wf-growth-diff ${gr>=0?'trend-text-up':'trend-text-down'}`;});
+  $('tot-plan-rev-val', e=>e.innerText=fmtMoney(planRev));
+  $('tot-act-rev-val', e=>e.innerText=fmtMoney(actRev));
+  $('tot-achieve-txt', e=>{e.innerText=ach+'%';e.style.color=ach>=100?'var(--down)':'var(--up)';});
+  /* Draw achievement ring */
+  drawAchieveRing(ach);
+  /* Update LY/TY labels to actual years */
+  var lyYear = proj.ly || 'LY';
+  var tyYear = proj.ty || 'TY';
+  $('tot-ly-lbl',      e=>e.textContent=lyYear);
+  $('tot-ty-lbl',      e=>e.textContent=tyYear);
+  $('tot-ly-stat-lbl', e=>e.textContent=lyYear+' 總實際營收');
+  $('tot-ty-stat-lbl', e=>e.textContent=tyYear+' 總實際營收');
+  $('tot-plan-lbl',    e=>e.textContent=tyYear+' 預估營收');
+  $('tot-act-lbl',     e=>e.textContent=tyYear+' 總實際營收');
+}
+
+/* ── Tech Debt Fix #3: Hub 增量更新（避免全量重繪） ── */
+// 已在 renderHub 中改為先清空 grid 再逐筆 append innerHTML，
+// 而非整個 grid.innerHTML = 一大串字串。
+// 對於大量專案，可進一步改用 DocumentFragment：
+// 目前已是 append 模式，效能顯著優於 V49 的單次整體注入。
+
+window.updateProjectMeta = function() {
+  const p = projects.find(p=>p.id===appState.currentProjectId);
+  const oldLy=p.ly, oldTy=p.ty;
+  p.title = document.getElementById('campaign-title-input').value;
+  p.ly    = document.getElementById('year-ly').value;
+  p.ty    = document.getElementById('year-ty').value;
+  p.memo  = document.getElementById('project-memo-input').value;
+  saveProjects();
+  if (oldLy!==p.ly||oldTy!==p.ty) window.renderDetail();
+};
+
+window.toggleProjectTag = function(tag) {
+  const p=projects.find(p=>p.id===appState.currentProjectId);
+  p.tags.includes(tag) ? p.tags=p.tags.filter(t=>t!==tag) : p.tags.push(tag);
+  saveProjects(); window.renderDetail();
+};
+window.addSection = function() {
+  const p=projects.find(p=>p.id===appState.currentProjectId);
+  p.sections.push({title:'新價格帶區塊',collapsed:false,lyItems:[],tyItems:[]});
+  saveProjects(); window.renderDetail();
+};
+window.updateSectionTitle = function(i,v) { const p=projects.find(p=>p.id===appState.currentProjectId); p.sections[i].title=v; saveProjects(); window.updateCharts(); };
+window.toggleSection = function(i) {
+  const p=projects.find(p=>p.id===appState.currentProjectId);
+  p.sections[i].collapsed=!p.sections[i].collapsed; saveProjects();
+  const cards=document.querySelectorAll('#sections-container .section-card');
+  if(cards[i]){
+    const body=cards[i].querySelector('.section-body');
+    const icon=cards[i].querySelector('.header-controls i');
+    p.sections[i].collapsed ? body.classList.add('collapsed') : body.classList.remove('collapsed');
+    if(icon) icon.className=`fas fa-chevron-up ${p.sections[i].collapsed?'fa-rotate-180':''}`;
+  }
+};
+window.updateItem = function(s,side,i,f,v) { const p=projects.find(p=>p.id===appState.currentProjectId); const list=side==='ly'?p.sections[s].lyItems:p.sections[s].tyItems; if(f==='name')list[i][f]=v; saveProjects(); window.updateCharts(); };
+window.addItem = function(s,side) { const p=projects.find(p=>p.id===appState.currentProjectId); if(side==='ly')p.sections[s].lyItems.push({name:'',qty:0,revenue:0}); else p.sections[s].tyItems.push({name:'',pQty:0,pRev:0,aQty:0,aRev:0}); saveProjects(); window.renderDetail(); };
+window.removeItem = function(s,side,i) { if(confirm('刪除此行？')){const p=projects.find(p=>p.id===appState.currentProjectId);const list=side==='ly'?p.sections[s].lyItems:p.sections[s].tyItems;list.splice(i,1);saveProjects();window.renderDetail();} };
+window.removeSection = function(i) { if(confirm('刪除整區？')){const p=projects.find(p=>p.id===appState.currentProjectId);p.sections.splice(i,1);saveProjects();window.renderDetail();} };
+
+function handleDragStart(e){dragSrcEl=this;e.dataTransfer.effectAllowed='move';this.classList.add('dragging');}
+function handleDragOver(e){if(e.preventDefault)e.preventDefault();return false;}
+function handleDragEnd(){this.classList.remove('dragging');}
+function handleDrop(e){if(e.stopPropagation)e.stopPropagation();if(dragSrcEl!==this){const p=projects.find(p=>p.id===appState.currentProjectId);const si=parseInt(dragSrcEl.getAttribute('data-index'));const ti=parseInt(this.getAttribute('data-index'));[p.sections[si],p.sections[ti]]=[p.sections[ti],p.sections[si]];saveProjects();window.renderDetail();}return false;}
+
+/* ── Charts ── */
+window.revenueChart=null;window.volumeChart=null;window.revDonut=null;window.volDonut=null;
+
+window.updateCharts = function() {
+  const proj=projects.find(p=>p.id===appState.currentProjectId); if(!proj)return;
+  const cc=getChartColors();
+  const labels=proj.sections.map(s=>s.title);
+  const dLyR=proj.sections.map(s=>s.lyItems.reduce((a,b)=>a+(b.revenue||0),0));
+  const dTyR=proj.sections.map(s=>s.tyItems.reduce((a,b)=>a+(b.aRev||0),0));
+  const dLyQ=proj.sections.map(s=>s.lyItems.reduce((a,b)=>a+(b.qty||0),0));
+  const dTyQ=proj.sections.map(s=>s.tyItems.reduce((a,b)=>a+(b.aQty||0),0));
+
+  let pMap={};
+  proj.sections.forEach(s=>s.tyItems.forEach(i=>{
+    if(i.aRev>0||i.aQty>0){const n=i.name||'未命名';if(!pMap[n])pMap[n]={rev:0,qty:0};pMap[n].rev+=i.aRev;pMap[n].qty+=i.aQty;}
+  }));
+  const sR=Object.entries(pMap).sort((a,b)=>b[1].rev-a[1].rev).slice(0,6);
+  const sQ=Object.entries(pMap).sort((a,b)=>b[1].qty-a[1].qty).slice(0,6);
+  const hasR=sR.length>0&&sR[0][1].rev>0;
+  const hasQ=sQ.length>0&&sQ[0][1].qty>0;
+
+  Chart.defaults.color=cc.text;
+  const bCfg={barPercentage:.9,categoryPercentage:.45,borderRadius:8,borderSkipped:'bottom',maxBarThickness:32};
+  const bOpts={responsive:true,maintainAspectRatio:false,layout:{padding:{top:10}},scales:{x:{grid:{color:cc.grid},ticks:{color:cc.text}},y:{grace:'30%',grid:{color:cc.grid},ticks:{color:cc.text,maxTicksLimit:6}}},plugins:{legend:{position:'top',labels:{color:cc.text,usePointStyle:true,padding:15}}}};
+
+  const makeGrad=(ctx,c1,c2)=>{const g=ctx.createLinearGradient(0,400,0,0);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
+
+  const revEl=document.getElementById('revenueChart');
+  if(revEl){if(window.revenueChart)window.revenueChart.destroy();const ctx=revEl.getContext('2d');window.revenueChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:`${proj.ly} 營收`,data:dLyR,backgroundColor:makeGrad(ctx,'#93c5fd','#3b82f6'),...bCfg,datalabels:{align:'top',anchor:'end',offset:4,color:cc.text}},{label:`${proj.ty} 營收`,data:dTyR,backgroundColor:makeGrad(ctx,'#6ee7b7','#059669'),...bCfg,datalabels:{align:'top',anchor:'end',color:isDarkMode?'#6ee7b7':'#059669',font:{weight:'bold'},offset:4}}]},options:{...bOpts,plugins:{...bOpts.plugins,datalabels:{formatter:v=>v>0?'$'+(v/1000).toFixed(0)+'k':'',color:cc.text}}}});}
+
+  const volEl=document.getElementById('volumeChart');
+  if(volEl){if(window.volumeChart)window.volumeChart.destroy();const ctx=volEl.getContext('2d');window.volumeChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:`${proj.ly} 銷量`,data:dLyQ,backgroundColor:makeGrad(ctx,'#93c5fd','#3b82f6'),...bCfg,datalabels:{align:'top',anchor:'end',offset:4,color:cc.text}},{label:`${proj.ty} 銷量`,data:dTyQ,backgroundColor:makeGrad(ctx,'#6ee7b7','#059669'),...bCfg,datalabels:{align:'top',anchor:'end',color:isDarkMode?'#6ee7b7':'#059669',font:{weight:'bold'},offset:4}}]},options:{...bOpts,plugins:{...bOpts.plugins,datalabels:{formatter:v=>v>0?v.toLocaleString():'',color:cc.text}}}});}
+
+  const dColors=['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#64748b'];
+  const dOpts={responsive:true,maintainAspectRatio:false,cutout:'70%',layout:{padding:10},plugins:{legend:{position:'right',labels:{color:cc.text,padding:18,usePointStyle:true}}}};
+  const revTot=hasR?sR.reduce((s,i)=>s+i[1].rev,0):1;
+  const qtyTot=hasQ?sQ.reduce((s,i)=>s+i[1].qty,0):1;
+
+  const rdEl=document.getElementById('revenueDonut');
+  if(rdEl){if(window.revDonut)window.revDonut.destroy();window.revDonut=new Chart(rdEl,{type:'doughnut',data:{labels:hasR?sR.map(i=>i[0]):['目前無資料'],datasets:[{data:hasR?sR.map(i=>i[1].rev):[1],backgroundColor:hasR?dColors:[isDarkMode?'#334155':'#e2e8f0'],borderWidth:isDarkMode?2:1,borderColor:isDarkMode?'#1e293b':'#fff',hoverOffset:12}]},options:{...dOpts,plugins:{...dOpts.plugins,datalabels:{color:'#fff',font:{weight:'bold',size:11},textAlign:'center',formatter:v=>{if(!hasR||v<=0)return'';return'$'+(v/1000).toFixed(0)+'k\n'+((v/revTot)*100).toFixed(1)+'%';}}}}})}
+
+  const vdEl=document.getElementById('volumeDonut');
+  if(vdEl){if(window.volDonut)window.volDonut.destroy();window.volDonut=new Chart(vdEl,{type:'doughnut',data:{labels:hasQ?sQ.map(i=>i[0]):['目前無資料'],datasets:[{data:hasQ?sQ.map(i=>i[1].qty):[1],backgroundColor:hasQ?dColors:[isDarkMode?'#334155':'#e2e8f0'],borderWidth:isDarkMode?2:1,borderColor:isDarkMode?'#1e293b':'#fff',hoverOffset:12}]},options:{...dOpts,plugins:{...dOpts.plugins,datalabels:{color:'#fff',font:{weight:'bold',size:11},textAlign:'center',formatter:v=>{if(!hasQ||v<=0)return'';return v.toLocaleString()+'\n'+((v/qtyTot)*100).toFixed(1)+'%';}}}}})}
+};
+
+/* ── Boot ── */
+Chart.register(ChartDataLabels);
+
+/* Sidebar collapse toggle */
+var sidebarCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+window.toggleSidebar = function() {
+  sidebarCollapsed = !sidebarCollapsed;
+  localStorage.setItem('sidebar_collapsed', sidebarCollapsed);
+  applySidebarState();
+};
+function applySidebarState() {
+  var sidebar = document.querySelector('.sidebar');
+  var icon    = document.getElementById('sidebar-toggle-icon');
+  var main    = document.querySelector('.main-content');
+  if (sidebarCollapsed) {
+    sidebar.classList.add('collapsed');
+    if (icon) icon.style.transform = 'rotate(180deg)';
+    /* 52px = visible strip when collapsed */
+    if (main) main.style.paddingLeft = 'calc(52px + 36px)';
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (icon) icon.style.transform = 'rotate(0deg)';
+    if (main) main.style.paddingLeft = 'calc(268px + 36px)';
+  }
+}
+/* Apply on load */
+document.addEventListener('DOMContentLoaded', function() {
+  applySidebarState();
 });
-document.getElementById('btn-back').addEventListener('click',showWelcome);
-document.fonts.ready.then(function(){
-  setupW();
-  wCtx.font='800 '+wFS+'px Urbanist,sans-serif';
-  wCtx.fillStyle='#1e2db8';wCtx.fillText('Welcome',wPX,wPY+wFS*.88);
-  setTimeout(function(){wRun=true;requestAnimationFrame(drawW);},1300);
-});
-window.addEventListener('resize',function(){
-  wRun=false;
-  setTimeout(function(){
-    setupW();wRun=true;requestAnimationFrame(drawW);
-    if(lRun){lRun=false;setupL();lRun=true;requestAnimationFrame(drawL);}
-  },80);
-});
+
+initAuth();
 </script>
 </body>
 </html>
