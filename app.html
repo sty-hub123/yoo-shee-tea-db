@@ -156,7 +156,7 @@ body {
   flex-direction: column;
   gap: 0;
   box-shadow: 2px 0 20px rgba(37,99,235,0.06);
-  transition: width .3s cubic-bezier(0.16,1,0.3,1), background .3s, padding .3s;
+  transition: transform .3s cubic-bezier(0.16,1,0.3,1), background .3s;
   overflow: hidden;
 }
 .sidebar.collapsed {
@@ -259,7 +259,7 @@ body {
 
 /* ── Main content ── */
 .main-content {
-  padding: 28px 36px 80px calc(56px + 36px);
+  padding: 28px 36px 80px calc(var(--sidebar-w) + 36px);
   min-height: 100vh;
   transition: padding .3s;
 }
@@ -1109,15 +1109,21 @@ let currentUser = null;
 /* ── Auth Guard ── */
 async function initAuth() {
   showLoading('驗證身份中…');
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) {
-    window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/index.html';
-    return;
+  try {
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (error || !session) {
+      window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/';
+      return;
+    }
+    currentUser = session.user;
+    updateUserUI(currentUser);
+    await loadAllData();
+    hideLoading();
+  } catch(err) {
+    console.error('initAuth error:', err);
+    hideLoading();
+    showToast('載入失敗，請重新整理頁面', 'error');
   }
-  currentUser = session.user;
-  updateUserUI(currentUser);
-  await loadAllData();
-  hideLoading();
 }
 
 function updateUserUI(user) {
@@ -1219,12 +1225,17 @@ async function loadAllData() {
     renderHub();
   } catch (err) {
     console.error('Load error:', err);
-    showToast('資料載入失敗，使用本機備援', 'error');
+    showToast('雲端載入失敗，使用本機資料', 'error');
     /* Fallback to localStorage */
-    projects = JSON.parse(localStorage.getItem('yuxitang_projects_v49') || '[]');
-    masterTags = JSON.parse(localStorage.getItem('yuxitang_tags_v49') || '["春節","端午","中秋","母親節","週年慶"]');
+    try {
+      projects = JSON.parse(localStorage.getItem('yuxitang_projects_v49') || '[]');
+      masterTags = JSON.parse(localStorage.getItem('yuxitang_tags_v49') || '["春節","端午","中秋","母親節","週年慶"]');
+    } catch(e) {
+      projects = []; masterTags = ['春節','端午','中秋','母親節','週年慶'];
+    }
     renderHubFilters();
     renderHub();
+    hideLoading();
   }
 }
 
@@ -2084,11 +2095,12 @@ function applySidebarState() {
   if (sidebarCollapsed) {
     sidebar.classList.add('collapsed');
     if (icon) icon.style.transform = 'rotate(180deg)';
-    if (main) main.style.paddingLeft = 'calc(48px + 36px)';
+    /* 52px = visible strip when collapsed */
+    if (main) main.style.paddingLeft = 'calc(52px + 36px)';
   } else {
     sidebar.classList.remove('collapsed');
     if (icon) icon.style.transform = 'rotate(0deg)';
-    if (main) main.style.paddingLeft = 'calc(var(--sidebar-w) + 36px)';
+    if (main) main.style.paddingLeft = 'calc(268px + 36px)';
   }
 }
 /* Apply on load */
