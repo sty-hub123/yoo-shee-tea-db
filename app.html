@@ -1118,9 +1118,12 @@ let currentUser = null;
 async function initAuth() {
   showLoading('驗證身份中…');
   try {
-    const { data: { session }, error } = await sb.auth.getSession();
-    if (error || !session) {
-      window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/';
+    const { data, error } = await sb.auth.getSession();
+    const session = data && data.session;
+    if (!session) {
+      // Not logged in — go back to login page (only once, no loop)
+      hideLoading();
+      window.location.replace('https://sty-hub123.github.io/yoo-shee-tea-db/');
       return;
     }
     currentUser = session.user;
@@ -1130,7 +1133,7 @@ async function initAuth() {
   } catch(err) {
     console.error('initAuth error:', err);
     hideLoading();
-    showToast('載入失敗，請重新整理頁面', 'error');
+    showToast('載入失敗，請按 F5 重新整理', 'error');
   }
 }
 
@@ -1145,7 +1148,7 @@ function updateUserUI(user) {
 
 window.doSignOut = async function() {
   await sb.auth.signOut();
-  window.location.href = 'https://sty-hub123.github.io/yoo-shee-tea-db/index.html';
+  window.location.replace('https://sty-hub123.github.io/yoo-shee-tea-db/');
 };
 
 /* ═══════════════════════════════════════════
