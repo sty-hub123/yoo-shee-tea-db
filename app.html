@@ -143,12 +143,12 @@ body {
 
 /* ── Sidebar ── */
 .sidebar {
-  width: var(--sidebar-w);
+  width: 60px;
   background: var(--bg-sidebar);
   backdrop-filter: var(--blur-strong);
   -webkit-backdrop-filter: var(--blur-strong);
   border-right: 0.5px solid var(--border);
-  padding: 24px 18px;
+  padding: 20px 10px;
   position: fixed;
   top: 0; left: 0; bottom: 0;
   z-index: 100;
@@ -156,7 +156,44 @@ body {
   flex-direction: column;
   gap: 0;
   box-shadow: 2px 0 20px rgba(37,99,235,0.06);
-  transition: background .3s, border-color .3s;
+  transition: width .3s cubic-bezier(0.16,1,0.3,1), background .3s, padding .3s;
+  overflow: hidden;
+}
+.sidebar:hover {
+  width: var(--sidebar-w);
+  padding: 24px 18px;
+}
+.sidebar .brand-text,
+.sidebar .side-title,
+.sidebar .nav-item span,
+.sidebar .user-info,
+.sidebar .nav-item i ~ *,
+.sidebar .user-name,
+.sidebar .user-email {
+  opacity: 0;
+  transition: opacity .2s ease;
+  white-space: nowrap;
+}
+.sidebar:hover .brand-text,
+.sidebar:hover .side-title,
+.sidebar:hover .user-info,
+.sidebar:hover .user-name,
+.sidebar:hover .user-email {
+  opacity: 1;
+}
+.sidebar .nav-item {
+  overflow: hidden;
+  justify-content: flex-start;
+}
+.sidebar .divider {
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+.sidebar:hover .divider {
+  opacity: 1;
+}
+.sidebar-user {
+  overflow: hidden;
 }
 
 .brand {
@@ -246,7 +283,7 @@ body {
 
 /* ── Main content ── */
 .main-content {
-  padding: 28px 36px 80px calc(var(--sidebar-w) + 36px);
+  padding: 28px 36px 80px calc(60px + 36px);
   min-height: 100vh;
   transition: padding .3s;
 }
@@ -764,37 +801,53 @@ body {
 .wf-achieve-pct { font-size: 52px; font-weight: 900; color: var(--up); line-height: 1; margin-bottom: 20px; }
 .wf-progress-container { width: 80%; max-width: 300px; height: 14px; background: var(--chart-grid); border-radius: 8px; overflow: hidden; }
 .progress-fill { height: 100%; transition: width 0.8s var(--ease-bounce); border-radius: 8px; }
-/* Achievement ring */
-.achieve-ring-wrap {
-  position: relative; width: 160px; height: 160px;
-  border-radius: 50%; background: #18181b;
-  box-shadow: inset 0 4px 12px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.08);
+/* Gauge semicircle for achievement */
+.gauge-wrap {
+  position: relative;
+  width: 220px; height: 120px;
   margin: 0 auto;
+  overflow: visible;
 }
-.achieve-ring-wrap canvas { position: absolute; top: 0; left: 0; }
-.achieve-ring-text {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-}
-.achieve-ring-pct { font-size: 32px; font-weight: 900; color: #ffffff; line-height: 1; margin-bottom: 4px; font-family: 'Urbanist', sans-serif; }
-.achieve-ring-lbl { font-size: 11px; color: #94a3b8; font-weight: 600; font-family: 'Urbanist', sans-serif; }
-/* Dot cap for ring */
-.achieve-ring-dot-wrap {
-  position: absolute; width: 100%; height: 100%;
-  border-radius: 50%; top: 0; left: 0;
-  transition: transform 0.8s cubic-bezier(0.34,1.56,0.64,1);
-  transform-origin: center center;
-}
-.achieve-ring-dot-wrap::after {
-  content: '';
+.gauge-wrap canvas { display: block; }
+.gauge-center-text {
   position: absolute;
-  left: 50%; top: -7px;
-  width: 14px; height: 14px;
-  margin-left: -7px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.5);
+  bottom: 0; left: 0; right: 0;
+  display: flex; flex-direction: column; align-items: center;
+}
+.gauge-pct {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 38px; font-weight: 900;
+  line-height: 1; margin-bottom: 4px;
+  background: linear-gradient(135deg, #6ee7b7, #059669);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gauge-pct.over { background: linear-gradient(135deg, #fcd34d, #f59e0b); -webkit-background-clip: text; background-clip: text; }
+.gauge-lbl {
+  font-family: 'Urbanist', sans-serif;
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+}
+.gauge-needle {
+  position: absolute;
+  bottom: 4px; left: 50%;
+  width: 2px; height: 52px;
+  margin-left: -1px;
+  transform-origin: bottom center;
+  transition: transform 1s cubic-bezier(0.34,1.2,0.64,1);
+}
+.gauge-needle::before {
+  content: ''; position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 2px; height: 44px;
+  background: linear-gradient(180deg, var(--text-main), transparent);
+  border-radius: 2px;
+}
+.gauge-needle::after {
+  content: ''; position: absolute;
+  bottom: -4px; left: 50%; transform: translateX(-50%);
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--text-main);
+  box-shadow: 0 0 6px rgba(37,99,235,0.4);
 }
 
 /* Charts */
@@ -1318,15 +1371,20 @@ window.duplicateProject = function(id) {
 };
 
 window.deleteCurrentProject = async function() {
-  if (!confirm('確定要刪除整個檔期專案？此操作不可逆！')) return;
-  const pid = appState.currentProjectId;
-  projects = projects.filter(p => p.id !== pid);
-  /* Delete from Supabase */
-  if (currentUser) {
-    await sb.from('projects').delete().eq('id', pid).eq('user_id', currentUser.id);
-  }
+  var pid = appState.currentProjectId;
+  if (!pid) { showToast('找不到專案 ID', 'error'); return; }
+  var proj = projects.find(function(p){ return p.id === pid; });
+  var name = proj ? proj.title : '此專案';
+  var confirmed = window.confirm('確定要刪除「' + name + '」？
+此操作不可逆！');
+  if (!confirmed) return;
+  projects = projects.filter(function(p){ return p.id !== pid; });
   localStorage.setItem('yuxitang_projects_v49', JSON.stringify(projects));
-  showToast('專案已刪除', 'error');
+  /* Delete from Supabase async (don't await, go back immediately) */
+  if (currentUser) {
+    sb.from('projects').delete().eq('id', pid).eq('user_id', currentUser.id).then(function(){});
+  }
+  showToast('「' + name + '」已刪除', 'error');
   goBackToHub();
 };
 
@@ -1742,67 +1800,74 @@ function updateRing(sIdx, type, pct) {
   }
 }
 
-/* Achievement ring (bottom executive card) */
+/* Gauge semicircle for achievement rate */
 function drawAchieveRing(pct) {
   var canvas = document.getElementById('tot-achieve-canvas');
   if (!canvas) return;
   var ctx2 = canvas.getContext('2d');
   var dpr2 = window.devicePixelRatio || 1;
-  var size = 160;
+  var W = 220, H = 120;
 
-  if (canvas.width !== size * dpr2) {
-    canvas.width  = size * dpr2;
-    canvas.height = size * dpr2;
-    canvas.style.width  = size + 'px';
-    canvas.style.height = size + 'px';
-    ctx2.scale(dpr2, dpr2);
-  }
+  canvas.width  = W * dpr2; canvas.height = H * dpr2;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx2.scale(dpr2, dpr2);
+  ctx2.clearRect(0, 0, W, H);
 
-  ctx2.clearRect(0, 0, size, size);
-  var cx2 = size/2, cy2 = size/2, r2 = 62, sw = 16;
-  var startAngle = -Math.PI / 2;
+  var cx2 = W / 2, cy2 = H - 10;
+  var r2 = 92, sw = 18;
+  var startA = Math.PI;       /* 9 o'clock (left) */
+  var endA   = 2 * Math.PI;  /* 3 o'clock (right) */
 
-  /* Track */
+  /* Track (grey semicircle) */
   ctx2.beginPath();
-  ctx2.arc(cx2, cy2, r2, 0, 2*Math.PI);
-  ctx2.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx2.arc(cx2, cy2, r2, startA, endA);
+  ctx2.strokeStyle = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
   ctx2.lineWidth = sw;
+  ctx2.lineCap = 'round';
   ctx2.stroke();
 
-  if (pct <= 0) return;
+  if (pct <= 0) {
+    /* Needle at far left */
+    var needle = document.getElementById('tot-achieve-needle');
+    if (needle) needle.style.transform = 'rotate(-90deg)';
+    return;
+  }
 
-  var draw = Math.min(pct, 200) / 100;
-  var endAngle = startAngle + draw * 2 * Math.PI;
+  /* Clamp for display — show up to 200% but needle maxes at edge */
+  var fillPct = Math.min(pct, 200);
+  var fillRatio = fillPct / 100; /* 0–2 */
+  var arcSpan = Math.PI; /* semicircle = π radians */
+  var fillEnd = startA + (fillRatio / 2) * arcSpan; /* /2 because max is 200% */
+  fillEnd = Math.min(fillEnd, endA); /* cap at right edge */
 
-  var g = ctx2.createLinearGradient(cx2, cy2-r2, cx2, cy2+r2);
-  g.addColorStop(0, '#6ee7b7');
-  g.addColorStop(1, '#059669');
+  /* Gradient: green for ≤100%, gold for >100% */
+  var g;
+  if (pct <= 100) {
+    g = ctx2.createLinearGradient(cx2 - r2, cy2, cx2 + r2, cy2);
+    g.addColorStop(0, '#6ee7b7');
+    g.addColorStop(1, '#059669');
+  } else {
+    g = ctx2.createLinearGradient(cx2 - r2, cy2, cx2 + r2, cy2);
+    g.addColorStop(0, '#fde68a');
+    g.addColorStop(1, '#f59e0b');
+  }
 
-  /* Start cap */
   ctx2.beginPath();
-  ctx2.arc(cx2, cy2-r2, sw/2-1, 0, 2*Math.PI);
-  ctx2.fillStyle = '#6ee7b7';
-  ctx2.fill();
-
-  /* Arc */
-  ctx2.beginPath();
-  ctx2.arc(cx2, cy2, r2, startAngle, endAngle);
+  ctx2.arc(cx2, cy2, r2, startA, fillEnd);
   ctx2.strokeStyle = g;
   ctx2.lineWidth = sw;
-  ctx2.lineCap = 'butt';
+  ctx2.lineCap = 'round';
   ctx2.stroke();
 
-  /* Dot cap */
-  var dot = document.getElementById('tot-achieve-dot');
-  if (dot) {
-    dot.style.transform = 'rotate('+(pct*3.6)+'deg)';
-    if (!dot._styleSet) {
-      dot._styleSet = true;
-      var s = document.createElement('style');
-      s.textContent = '#tot-achieve-dot::after { background: #059669 !important; width:16px; height:16px; margin-left:-8px; top:-8px; }';
-      document.head.appendChild(s);
-    }
-  }
+  /* Needle rotation: -90deg = 0%, 0deg = 50%(100%), +90deg = 100%(200%) */
+  var needleDeg = -90 + (fillRatio / 2) * 180;
+  needleDeg = Math.max(-90, Math.min(90, needleDeg));
+  var needle = document.getElementById('tot-achieve-needle');
+  if (needle) needle.style.transform = 'rotate(' + needleDeg + 'deg)';
+
+  /* Update text colour */
+  var txt = document.getElementById('tot-achieve-txt');
+  if (txt) txt.className = 'gauge-pct' + (pct > 100 ? ' over' : '');
 }
 
 /* ── Tech Debt Fix #2: initTotalBoard 分離 DOM 存在與資料更新 ── */
@@ -1855,18 +1920,18 @@ function initTotalBoardHTML() {
     <div class="wf-card hover-lift">
       <div class="wf-card-header"><i class="fas fa-bullseye" style="color:var(--gold)"></i> 業績目標達成率</div>
       <div class="wf-top-row">
-        <div class="wf-stat"><div class="wf-stat-label">TY 預估營收</div><div class="wf-stat-val-ly" id="tot-plan-rev-val">$0</div></div>
+        <div class="wf-stat"><div class="wf-stat-label" id="tot-plan-lbl">TY 預估營收</div><div class="wf-stat-val-ly" id="tot-plan-rev-val">$0</div></div>
         <div class="wf-divider"></div>
-        <div class="wf-stat"><div class="wf-stat-label">TY 總實際營收</div><div class="wf-stat-val" id="tot-act-rev-val">$0</div></div>
+        <div class="wf-stat"><div class="wf-stat-label" id="tot-act-lbl">TY 總實際營收</div><div class="wf-stat-val" id="tot-act-rev-val">$0</div></div>
       </div>
-      <div class="wf-bottom-row" style="align-items:center;justify-content:center;padding:8px 0">
-        <div class="wf-achieve-box">
-          <div class="achieve-ring-wrap">
-            <canvas id="tot-achieve-canvas" width="160" height="160"></canvas>
-            <div class="achieve-ring-dot-wrap" id="tot-achieve-dot"></div>
-            <div class="achieve-ring-text">
-              <div class="achieve-ring-pct" id="tot-achieve-txt">0%</div>
-              <div class="achieve-ring-lbl">達成率</div>
+      <div class="wf-bottom-row" style="align-items:center;justify-content:center;padding:12px 0 0">
+        <div class="wf-achieve-box" style="gap:0">
+          <div class="gauge-wrap">
+            <canvas id="tot-achieve-canvas" width="220" height="120"></canvas>
+            <div class="gauge-needle" id="tot-achieve-needle" style="transform:rotate(-90deg)"></div>
+            <div class="gauge-center-text">
+              <div class="gauge-pct" id="tot-achieve-txt">0%</div>
+              <div class="gauge-lbl">目標達成率</div>
             </div>
           </div>
         </div>
@@ -1907,6 +1972,8 @@ function updateTotalDOM(proj) {
   $('tot-ty-lbl',      e=>e.textContent=tyYear);
   $('tot-ly-stat-lbl', e=>e.textContent=lyYear+' 總實際營收');
   $('tot-ty-stat-lbl', e=>e.textContent=tyYear+' 總實際營收');
+  $('tot-plan-lbl',    e=>e.textContent=tyYear+' 預估營收');
+  $('tot-act-lbl',     e=>e.textContent=tyYear+' 總實際營收');
 }
 
 /* ── Tech Debt Fix #3: Hub 增量更新（避免全量重繪） ── */
