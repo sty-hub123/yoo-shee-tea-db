@@ -1102,7 +1102,15 @@ body {
 ═══════════════════════════════════════════ */
 const SUPABASE_URL = 'https://sbhogbwaqzjlhqbckwef.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_JsnZRdnJSWPTu8_uAQtksA_ldGpXT0W';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    storage: window.localStorage,
+    storageKey: 'yoosheetea-auth',
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
 
 let currentUser = null;
 
@@ -1383,8 +1391,7 @@ window.deleteCurrentProject = async function() {
   if (!pid) { showToast('找不到專案 ID', 'error'); return; }
   var proj = projects.find(function(p){ return p.id === pid; });
   var name = proj ? proj.title : '此專案';
-  var confirmed = window.confirm('確定要刪除「' + name + '」？
-此操作不可逆！');
+  var confirmed = window.confirm('確定要刪除「' + name + '」？此操作不可逆！');
   if (!confirmed) return;
   projects = projects.filter(function(p){ return p.id !== pid; });
   localStorage.setItem('yuxitang_projects_v49', JSON.stringify(projects));
