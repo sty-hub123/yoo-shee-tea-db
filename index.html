@@ -355,9 +355,10 @@ body {
 
 /* ── Main content ── */
 .main-content {
-  padding: 28px 36px 80px calc(var(--sidebar-w) + 36px);
+  padding: 28px clamp(16px, 3vw, 36px) 80px calc(var(--sidebar-w) + clamp(16px, 3vw, 36px));
   min-height: 100vh;
   transition: padding .3s;
+  max-width: 1600px;
 }
 
 /* ─── Top Bar ─── */
@@ -1257,6 +1258,49 @@ body { overflow-y: auto; }
 .sku-empty i { font-size: 36px; margin-bottom: 16px; opacity: .4; display: block; }
 .sku-empty p { font-size: 14px; }
 
+
+/* SKU season tags */
+.tag-input-wrap {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px; cursor: text; min-height: 40px;
+  align-items: center;
+  transition: border-color .2s;
+}
+.tag-input-wrap:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+.sku-tag-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--primary-light); color: var(--primary);
+  border: 0.5px solid rgba(37,99,235,.2);
+  padding: 2px 8px; border-radius: 100px;
+  font-size: 11px; font-weight: 700;
+}
+.sku-tag-pill span { cursor: pointer; opacity: .6; font-size: 13px; line-height: 1; }
+.sku-tag-pill span:hover { opacity: 1; }
+.tag-bare-input {
+  border: none; outline: none; background: transparent;
+  font-size: 13px; color: var(--text-main); font-family: inherit;
+  min-width: 80px; flex: 1;
+  -webkit-text-fill-color: var(--text-main);
+}
+.tag-suggestions {
+  position: absolute; z-index: 100;
+  background: var(--bg-card-solid);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(37,99,235,.1);
+  overflow: hidden; max-height: 160px; overflow-y: auto;
+}
+.tag-suggestion-item {
+  padding: 8px 12px; cursor: pointer; font-size: 13px;
+  color: var(--text-main); transition: background .15s;
+}
+.tag-suggestion-item:hover { background: var(--bg-hover); color: var(--primary); }
 </style>
 </head>
 <body>
@@ -1502,6 +1546,7 @@ body { overflow-y: auto; }
             <th>類別</th>
             <th>狀態</th>
             <th>描述</th>
+            <th>檔期標籤</th>
             <th style="width:80px;text-align:center">操作</th>
           </tr>
         </thead>
@@ -1572,6 +1617,15 @@ body { overflow-y: auto; }
         <div class="sku-form-group">
           <label class="sku-form-label">描述（選填）</label>
           <input class="sku-form-input" id="sku-f-desc" placeholder="簡短描述商品特色…">
+        </div>
+        <div class="sku-form-group" style="position:relative">
+          <label class="sku-form-label">適用檔期標籤（選填）</label>
+          <div class="tag-input-wrap" id="sku-tag-wrap" onclick="document.getElementById('sku-tag-bare').focus()">
+            <span id="sku-tags-display"></span>
+            <input class="tag-bare-input" id="sku-tag-bare" placeholder="輸入標籤後按 Enter，例：春節、常態">
+          </div>
+          <div class="tag-suggestions" id="tag-suggestions" style="display:none"></div>
+          <div style="font-size:11px;color:var(--text-subtle);margin-top:4px">按 Enter 新增，常用：春節、端午、中秋、母親節、常態</div>
         </div>
       </div>
       <div class="sku-modal-footer">
@@ -1749,16 +1803,96 @@ window.renderSKUTable = function() {
     td7.appendChild(editBtn);
     td7.appendChild(delBtn);
 
+    var td8 = document.createElement('td');
+    if (s.season_tags && s.season_tags.length) {
+      s.season_tags.forEach(function(tag) {
+        var pill = document.createElement('span');
+        pill.style.cssText = 'display:inline-block;background:var(--primary-light);color:var(--primary);padding:2px 7px;border-radius:100px;font-size:10px;font-weight:700;margin:1px 2px';
+        pill.textContent = tag;
+        td8.appendChild(pill);
+      });
+    } else {
+      td8.textContent = '—';
+      td8.style.color = 'var(--text-subtle)';
+    }
+
     tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
     tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
-    tr.appendChild(td7);
+    tr.appendChild(td8); tr.appendChild(td7);
     tbody.appendChild(tr);
   });
 };
 
 /* Open modal */
+/* ── SKU Tag input logic ── */
+var skuCurrentTags = [];
+
+function renderTagPills() {
+  var display = document.getElementById('sku-tags-display');
+  if (!display) return;
+  display.innerHTML = '';
+  skuCurrentTags.forEach(function(tag, i) {
+    var pill = document.createElement('span');
+    pill.className = 'sku-tag-pill';
+    pill.innerHTML = tag + '<span onclick="window.removeSkuTag(' + i + ')">×</span>';
+    display.appendChild(pill);
+  });
+}
+
+window.removeSkuTag = function(i) {
+  skuCurrentTags.splice(i, 1);
+  renderTagPills();
+};
+
+function initTagInput() {
+  var input = document.getElementById('sku-tag-bare');
+  if (!input) return;
+  var commonTags = ['春節', '端午', '中秋', '母親節', '週年慶', '常態', '父親節', '聖誕節'];
+  input.addEventListener('keydown', function(e) {
+    if ((e.key === 'Enter' || e.key === ',') && input.value.trim()) {
+      e.preventDefault();
+      var tag = input.value.trim().replace(/,$/, '');
+      if (tag && !skuCurrentTags.includes(tag)) {
+        skuCurrentTags.push(tag);
+        renderTagPills();
+      }
+      input.value = '';
+      document.getElementById('tag-suggestions').style.display = 'none';
+    } else if (e.key === 'Backspace' && !input.value && skuCurrentTags.length) {
+      skuCurrentTags.pop();
+      renderTagPills();
+    }
+  });
+  input.addEventListener('input', function() {
+    var q = input.value.toLowerCase();
+    if (!q) { document.getElementById('tag-suggestions').style.display = 'none'; return; }
+    var matches = commonTags.filter(function(t){ return t.includes(q) && !skuCurrentTags.includes(t); });
+    var sug = document.getElementById('tag-suggestions');
+    if (!matches.length) { sug.style.display = 'none'; return; }
+    sug.style.display = 'block';
+    sug.innerHTML = '';
+    matches.forEach(function(t) {
+      var d = document.createElement('div');
+      d.className = 'tag-suggestion-item';
+      d.textContent = t;
+      d.onclick = function() {
+        if (!skuCurrentTags.includes(t)) { skuCurrentTags.push(t); renderTagPills(); }
+        input.value = '';
+        sug.style.display = 'none';
+        input.focus();
+      };
+      sug.appendChild(d);
+    });
+  });
+  document.addEventListener('click', function(e) {
+    var sug = document.getElementById('tag-suggestions');
+    if (sug && !sug.contains(e.target) && e.target !== input) sug.style.display = 'none';
+  });
+}
+
 window.openSKUModal = function() {
   skuEditId = null;
+  skuCurrentTags = [];
   document.getElementById('sku-modal-title').innerHTML = '<i class="fas fa-plus"></i> 新增商品';
   document.getElementById('sku-f-code').value = '';
   document.getElementById('sku-f-name').value = '';
@@ -1766,11 +1900,11 @@ window.openSKUModal = function() {
   document.getElementById('sku-f-cat').value = '';
   document.getElementById('sku-f-desc').value = '';
   document.getElementById('sku-f-status').value = 'active';
-  /* Update datalist */
+  renderTagPills();
   var cats = [...new Set(skus.map(function(s){ return s.category; }).filter(Boolean))];
-  document.getElementById('sku-cat-list').innerHTML = cats.map(function(c){ return '<option value="' + c + '">'; }).join('');
+  document.getElementById('sku-cat-list').innerHTML = cats.map(function(cat){ return '<option value="' + cat + '">'; }).join('');
   document.getElementById('sku-modal').classList.add('show');
-  setTimeout(function(){ document.getElementById('sku-f-code').focus(); }, 100);
+  setTimeout(function(){ initTagInput(); document.getElementById('sku-f-code').focus(); }, 100);
 };
 
 window.editSKU = function(id) {
@@ -1784,7 +1918,10 @@ window.editSKU = function(id) {
   document.getElementById('sku-f-cat').value = s.category || '';
   document.getElementById('sku-f-desc').value = s.description || '';
   document.getElementById('sku-f-status').value = s.status || 'active';
+  skuCurrentTags = s.season_tags || [];
+  renderTagPills();
   document.getElementById('sku-modal').classList.add('show');
+  setTimeout(function(){ initTagInput(); }, 100);
 };
 
 window.closeSKUModal = function() {
@@ -1814,6 +1951,7 @@ window.saveSKU = async function() {
     category: cat || null,
     description: desc || null,
     status: status,
+    season_tags: skuCurrentTags.length ? skuCurrentTags : null,
     updated_at: new Date().toISOString()
   };
 
@@ -3147,7 +3285,7 @@ function applySidebarState() {
     sidebar.classList.remove('collapsed');
     if (icon) icon.style.transform = 'rotate(0deg)';
     if (tab)  tab.classList.remove('show');
-    if (main) main.style.paddingLeft = 'calc(268px + 36px)';
+    if (main) main.style.paddingLeft = 'calc(268px + clamp(16px, 3vw, 36px))';
   }
 }
 /* Apply on load */
