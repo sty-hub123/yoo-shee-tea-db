@@ -1391,13 +1391,14 @@ async function loadAllData() {
     });
 
     /* Load tags */
-    const { data: tData } = await sb
+    var tRes = await sb
       .from('tags')
       .select('*')
       .eq('user_id', currentUser.id)
-      .single();
+      .limit(1);
 
-    masterTags = tData?.tags || ['春節', '端午', '中秋', '母親節', '週年慶'];
+    var tData = tRes.data && tRes.data.length > 0 ? tRes.data[0] : null;
+    masterTags = (tData && tData.tags) ? tData.tags : ['春節', '端午', '中秋', '母親節', '週年慶'];
 
     /* Seed default project if empty AND no localStorage backup exists */
     if (projects.length === 0) {
