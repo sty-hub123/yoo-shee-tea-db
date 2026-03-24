@@ -886,28 +886,7 @@ body {
   font-family: 'Urbanist', sans-serif;
   font-size: 12px; font-weight: 600; color: var(--text-muted);
 }
-.gauge-needle {
-  position: absolute;
-  bottom: 4px; left: 50%;
-  width: 2px; height: 52px;
-  margin-left: -1px;
-  transform-origin: bottom center;
-  transition: transform 1s cubic-bezier(0.34,1.2,0.64,1);
-}
-.gauge-needle::before {
-  content: ''; position: absolute;
-  top: 0; left: 50%; transform: translateX(-50%);
-  width: 2px; height: 44px;
-  background: linear-gradient(180deg, var(--text-main), transparent);
-  border-radius: 2px;
-}
-.gauge-needle::after {
-  content: ''; position: absolute;
-  bottom: -4px; left: 50%; transform: translateX(-50%);
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--text-main);
-  box-shadow: 0 0 6px rgba(37,99,235,0.4);
-}
+
 
 /* Charts */
 .charts-container { margin-top: 16px; }
@@ -1017,7 +996,22 @@ body {
 }
 /* Hide scrollbar on login page */
 #view-login-page { overflow: hidden; height: 100vh; }
-#view-app { min-height: 100vh; }
+#view-app { min-height: 100vh; overflow-y: auto; }
+body { overflow-y: auto; }
+
+/* Small section gauge */
+.sk-gauge-wrap {
+  position: relative;
+  width: 110px; height: 70px;
+  margin: 0 auto;
+}
+.sk-gauge-wrap canvas { display: block; }
+.sk-gauge-text {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1px;
+}
 </style>
 </head>
 <body>
@@ -1577,21 +1571,21 @@ window.duplicateProject = function(id) {
   projects.unshift(np); saveProjects(); renderHub();
 };
 
-window.deleteCurrentProject = async function() {
+window.deleteCurrentProject = function() {
   var pid = appState.currentProjectId;
   if (!pid) { showToast('找不到專案 ID', 'error'); return; }
   var proj = projects.find(function(p){ return p.id === pid; });
   var name = proj ? proj.title : '此專案';
-  var confirmed = window.confirm('確定要刪除「' + name + '」？此操作不可逆！');
-  if (!confirmed) return;
+  if (!window.confirm('確定要刪除「' + name + '」？此操作不可逆！')) return;
   projects = projects.filter(function(p){ return p.id !== pid; });
   localStorage.setItem('yuxitang_projects_v49', JSON.stringify(projects));
-  /* Delete from Supabase async (don't await, go back immediately) */
   if (currentUser) {
-    sb.from('projects').delete().eq('id', pid).eq('user_id', currentUser.id).then(function(){});
+    sb.from('projects').delete().eq('id', pid).eq('user_id', currentUser.id).then(function(){
+      console.log('Deleted from cloud');
+    });
   }
   showToast('「' + name + '」已刪除', 'error');
-  goBackToHub();
+  window.goBackToHub();
 };
 
 window.exportAllData = function() {
@@ -1885,13 +1879,10 @@ var RING_COLORS = {
 };
 
 function buildRingSVG(sIdx, type) {
-  var col = RING_COLORS[type];
   return `
-    <div class="ring-canvas-wrap" id="ring-wrap-${type}-${sIdx}">
-      <canvas id="ring-canvas-${type}-${sIdx}" width="110" height="110"></canvas>
-      <div class="ring-dot-cap" id="ring-dot-${type}-${sIdx}" style="transform:rotate(0deg)">
-      </div>
-      <div class="ring-text-content">
+    <div class="sk-gauge-wrap" id="ring-wrap-${type}-${sIdx}">
+      <canvas id="ring-canvas-${type}-${sIdx}" width="110" height="60"></canvas>
+      <div class="sk-gauge-text">
         <span id="ring-${type}-val-${sIdx}" class="sk-circle-val">0%</span>
         <span class="sk-circle-lbl">達成率</span>
       </div>
@@ -1923,10 +1914,7 @@ function updateSectionDOM(sIdx, k) {
   updateRing(sIdx,'vol',k.volAchieve);
 }
 
-/* ── Apple Ring — canvas + rotating dot cap technique ──
-   Inspired by codepen dot approach: dot element rotates
-   alongside the arc, giving precise head/tail positioning.
-   Canvas draws track + gradient arc. ── */
+/* ── Section KPI Gauge — semicircle style ── */
 function updateRing(sIdx, type, pct) {
   var valEl = document.getElementById('ring-'+type+'-val-'+sIdx);
   if (valEl) valEl.innerText = pct + '%';
@@ -1935,75 +1923,45 @@ function updateRing(sIdx, type, pct) {
   if (!canvas) return;
   var ctx2 = canvas.getContext('2d');
   var dpr2 = window.devicePixelRatio || 1;
-  var size = 110;
+  var W = 110, H = 60;
 
-  /* Resize for retina */
-  if (canvas.width !== size * dpr2) {
-    canvas.width  = size * dpr2;
-    canvas.height = size * dpr2;
-    canvas.style.width  = size + 'px';
-    canvas.style.height = size + 'px';
-    ctx2.scale(dpr2, dpr2);
-  }
+  canvas.width = W * dpr2; canvas.height = H * dpr2;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx2.scale(dpr2, dpr2);
+  ctx2.clearRect(0, 0, W, H);
 
-  ctx2.clearRect(0, 0, size, size);
-
-  var cx2 = size / 2, cy2 = size / 2;
-  var r2  = 42, sw = 13;
-  var startAngle = -Math.PI / 2; /* 12 o'clock */
+  var cx2 = W / 2, cy2 = H - 4;
+  var r2 = 46, sw = 11;
+  var startA = Math.PI, endA = 2 * Math.PI;
 
   /* Track */
   ctx2.beginPath();
-  ctx2.arc(cx2, cy2, r2, 0, 2 * Math.PI);
-  ctx2.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx2.arc(cx2, cy2, r2, startA, endA);
+  ctx2.strokeStyle = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
   ctx2.lineWidth = sw;
+  ctx2.lineCap = 'round';
   ctx2.stroke();
 
   if (pct <= 0) return;
 
-  var col  = RING_COLORS[type];
-  var draw = Math.min(pct, 200) / 100; /* up to 2 full laps */
-  var endAngle = startAngle + draw * 2 * Math.PI;
+  var col = RING_COLORS[type];
+  var fillRatio = Math.min(pct, 200) / 100;
+  var fillEnd = startA + (fillRatio / 2) * Math.PI;
+  fillEnd = Math.min(fillEnd, endA);
 
-  /* Gradient: create along the arc direction */
-  var grad2 = ctx2.createLinearGradient(cx2, cy2 - r2, cx2, cy2 + r2);
-  grad2.addColorStop(0, col.start);
-  grad2.addColorStop(1, col.end);
-
-  /* Draw start cap (round) */
-  ctx2.beginPath();
-  ctx2.arc(cx2, cy2 - r2, sw/2 - 1, 0, 2*Math.PI);
-  ctx2.fillStyle = col.start;
-  ctx2.fill();
-
-  /* Draw arc */
-  ctx2.beginPath();
-  ctx2.arc(cx2, cy2, r2, startAngle, endAngle);
-  ctx2.strokeStyle = grad2;
-  ctx2.lineWidth = sw;
-  ctx2.lineCap = 'butt';
-  ctx2.stroke();
-
-  /* Dot cap — rotating div handles the end cap */
-  var dot = document.getElementById('ring-dot-'+type+'-'+sIdx);
-  if (dot) {
-    var deg = (pct / 100) * 360;
-    dot.style.transform = 'rotate(' + deg + 'deg)';
-    dot.style.setProperty('--dot-color', col.dot);
-    /* Set dot ::after color via inline style trick */
-    if (!dot._styleSet) {
-      dot._styleSet = true;
-      dot.style.cssText += '; --dot-color: ' + col.dot;
-      /* Inject style for this specific dot */
-      var styleId = 'dot-style-'+type+'-'+sIdx;
-      if (!document.getElementById(styleId)) {
-        var s = document.createElement('style');
-        s.id = styleId;
-        s.textContent = '#ring-dot-'+type+'-'+sIdx+'::after { background: '+col.dot+' !important; }';
-        document.head.appendChild(s);
-      }
-    }
+  var g = ctx2.createLinearGradient(cx2 - r2, cy2, cx2 + r2, cy2);
+  if (pct <= 100) {
+    g.addColorStop(0, col.start); g.addColorStop(1, col.end);
+  } else {
+    g.addColorStop(0, '#fde68a'); g.addColorStop(1, '#f59e0b');
   }
+
+  ctx2.beginPath();
+  ctx2.arc(cx2, cy2, r2, startA, fillEnd);
+  ctx2.strokeStyle = g;
+  ctx2.lineWidth = sw;
+  ctx2.lineCap = 'round';
+  ctx2.stroke();
 }
 
 /* Gauge semicircle for achievement rate */
@@ -2032,12 +1990,7 @@ function drawAchieveRing(pct) {
   ctx2.lineCap = 'round';
   ctx2.stroke();
 
-  if (pct <= 0) {
-    /* Needle at far left */
-    var needle = document.getElementById('tot-achieve-needle');
-    if (needle) needle.style.transform = 'rotate(-90deg)';
-    return;
-  }
+  if (pct <= 0) { return; }
 
   /* Clamp for display — show up to 200% but needle maxes at edge */
   var fillPct = Math.min(pct, 200);
@@ -2065,11 +2018,7 @@ function drawAchieveRing(pct) {
   ctx2.lineCap = 'round';
   ctx2.stroke();
 
-  /* Needle rotation: -90deg = 0%, 0deg = 50%(100%), +90deg = 100%(200%) */
-  var needleDeg = -90 + (fillRatio / 2) * 180;
-  needleDeg = Math.max(-90, Math.min(90, needleDeg));
-  var needle = document.getElementById('tot-achieve-needle');
-  if (needle) needle.style.transform = 'rotate(' + needleDeg + 'deg)';
+  /* No needle */
 
   /* Update text colour */
   var txt = document.getElementById('tot-achieve-txt');
@@ -2134,7 +2083,7 @@ function initTotalBoardHTML() {
         <div class="wf-achieve-box" style="gap:0">
           <div class="gauge-wrap">
             <canvas id="tot-achieve-canvas" width="220" height="120"></canvas>
-            <div class="gauge-needle" id="tot-achieve-needle" style="transform:rotate(-90deg)"></div>
+
             <div class="gauge-center-text">
               <div class="gauge-pct" id="tot-achieve-txt">0%</div>
               <div class="gauge-lbl">目標達成率</div>
