@@ -1652,10 +1652,20 @@ async function loadSKUs() {
 function renderCatFilters() {
   var cats = [...new Set(skus.map(function(s){ return s.category; }).filter(Boolean))];
   var el = document.getElementById('sku-cat-filters');
-  el.innerHTML = '<button class="cat-pill' + (skuActiveCat===''?' active':'') + '" onclick="window.setSKUCat('')">全部</button>' +
-    cats.map(function(cat){
-      return '<button class="cat-pill' + (skuActiveCat===cat?' active':'') + '" onclick="window.setSKUCat('' + cat + '')">' + cat + '</button>';
-    }).join('');
+  if (!el) return;
+  el.innerHTML = '';
+  var allBtn = document.createElement('button');
+  allBtn.className = 'cat-pill' + (skuActiveCat === '' ? ' active' : '');
+  allBtn.textContent = '全部';
+  allBtn.onclick = function() { window.setSKUCat(''); };
+  el.appendChild(allBtn);
+  cats.forEach(function(cat) {
+    var btn = document.createElement('button');
+    btn.className = 'cat-pill' + (skuActiveCat === cat ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = function() { window.setSKUCat(cat); };
+    el.appendChild(btn);
+  });
 }
 
 window.setSKUCat = function(cat) {
@@ -1680,27 +1690,68 @@ window.renderSKUTable = function() {
 
   if (filtered.length === 0) {
     tbody.innerHTML = '';
-    empty.style.display = 'block';
+    if (empty) empty.style.display = 'block';
     return;
   }
-  empty.style.display = 'none';
+  if (empty) empty.style.display = 'none';
 
-  tbody.innerHTML = filtered.map(function(s) {
+  tbody.innerHTML = '';
+  filtered.forEach(function(s) {
+    var tr = document.createElement('tr');
     var statusCls = s.status === 'active' ? 'sku-status-active' : 'sku-status-disc';
     var statusTxt = s.status === 'active' ? '在售' : '停售';
-    return '<tr>' +
-      '<td><span class="sku-code-badge">' + s.sku_code + '</span></td>' +
-      '<td style="font-weight:700">' + s.name + '</td>' +
-      '<td>$' + Number(s.price).toLocaleString() + '</td>' +
-      '<td>' + (s.category || '<span style="color:var(--text-subtle)">—</span>') + '</td>' +
-      '<td><span class="sku-status-badge ' + statusCls + '">' + statusTxt + '</span></td>' +
-      '<td style="color:var(--text-muted);font-size:12px">' + (s.description || '<span style="color:var(--text-subtle)">—</span>') + '</td>' +
-      '<td style="text-align:center">' +
-        '<button class="sku-action-btn" onclick="window.editSKU('' + s.id + '')" title="編輯"><i class="fas fa-pen"></i></button>' +
-        '<button class="sku-action-btn danger" onclick="window.deleteSKU('' + s.id + '')" title="刪除"><i class="fas fa-trash-alt"></i></button>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
+
+    var td1 = document.createElement('td');
+    var badge = document.createElement('span');
+    badge.className = 'sku-code-badge';
+    badge.textContent = s.sku_code;
+    td1.appendChild(badge);
+
+    var td2 = document.createElement('td');
+    td2.style.fontWeight = '700';
+    td2.textContent = s.name;
+
+    var td3 = document.createElement('td');
+    td3.textContent = '$' + Number(s.price).toLocaleString();
+
+    var td4 = document.createElement('td');
+    td4.textContent = s.category || '—';
+    if (!s.category) td4.style.color = 'var(--text-subtle)';
+
+    var td5 = document.createElement('td');
+    var statusBadge = document.createElement('span');
+    statusBadge.className = 'sku-status-badge ' + statusCls;
+    statusBadge.textContent = statusTxt;
+    td5.appendChild(statusBadge);
+
+    var td6 = document.createElement('td');
+    td6.style.cssText = 'color:var(--text-muted);font-size:12px';
+    td6.textContent = s.description || '—';
+    if (!s.description) td6.style.color = 'var(--text-subtle)';
+
+    var td7 = document.createElement('td');
+    td7.style.textAlign = 'center';
+
+    var editBtn = document.createElement('button');
+    editBtn.className = 'sku-action-btn';
+    editBtn.title = '編輯';
+    editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+    editBtn.onclick = (function(id){ return function(){ window.editSKU(id); }; })(s.id);
+
+    var delBtn = document.createElement('button');
+    delBtn.className = 'sku-action-btn danger';
+    delBtn.title = '刪除';
+    delBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+    delBtn.onclick = (function(id){ return function(){ window.deleteSKU(id); }; })(s.id);
+
+    td7.appendChild(editBtn);
+    td7.appendChild(delBtn);
+
+    tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+    tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
+    tr.appendChild(td7);
+    tbody.appendChild(tr);
+  });
 };
 
 /* Open modal */
