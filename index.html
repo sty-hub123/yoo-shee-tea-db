@@ -1469,28 +1469,11 @@ body { overflow-y: auto; }
         </div>
       </section>
     </div>
-  </main>
-
-
-  <!-- Delete Confirm Modal -->
-  <div class="delete-modal-overlay" id="delete-modal-overlay">
-    <div class="delete-modal">
-      <div class="delete-modal-icon"><i class="fas fa-trash-alt"></i></div>
-      <div class="delete-modal-title">刪除檔期專案</div>
-      <div class="delete-modal-sub">確定要刪除 <span class="delete-modal-name" id="delete-modal-name">此專案</span>？<br>滑動確認後將永久刪除，無法復原。</div>
-      <div class="slide-delete-track" id="slide-track">
-        <div class="slide-delete-fill" id="slide-fill"></div>
-        <div class="slide-delete-thumb" id="slide-thumb"><i class="fas fa-chevron-right"></i></div>
-        <div class="slide-delete-label" id="slide-label">← 向右滑動確認刪除</div>
-      </div>
-      <button class="btn-cancel-delete" onclick="window.closeDeleteModal()">取消</button>
-    </div>
-  </div>
-
+  
   <!-- ══════════════════════════════════════
        SKU 主數據庫 VIEW
   ══════════════════════════════════════ -->
-  <div style="display:none;padding:28px 36px 80px calc(268px + 36px);min-height:100vh;overflow-y:auto;transition:padding .3s" id="view-sku">
+  <div id="view-sku" class="main-content" style="display:none">
     <header class="top-bar">
       <div class="page-title">
         <h2><i class="fas fa-database" style="color:var(--primary);font-size:18px"></i> SKU 主數據庫</h2>
@@ -1530,6 +1513,25 @@ body { overflow-y: auto; }
       </div>
     </div>
   </div>
+    </main>
+
+
+  <!-- Delete Confirm Modal -->
+  <div class="delete-modal-overlay" id="delete-modal-overlay">
+    <div class="delete-modal">
+      <div class="delete-modal-icon"><i class="fas fa-trash-alt"></i></div>
+      <div class="delete-modal-title">刪除檔期專案</div>
+      <div class="delete-modal-sub">確定要刪除 <span class="delete-modal-name" id="delete-modal-name">此專案</span>？<br>滑動確認後將永久刪除，無法復原。</div>
+      <div class="slide-delete-track" id="slide-track">
+        <div class="slide-delete-fill" id="slide-fill"></div>
+        <div class="slide-delete-thumb" id="slide-thumb"><i class="fas fa-chevron-right"></i></div>
+        <div class="slide-delete-label" id="slide-label">← 向右滑動確認刪除</div>
+      </div>
+      <button class="btn-cancel-delete" onclick="window.closeDeleteModal()">取消</button>
+    </div>
+  </div>
+
+
 
   <!-- SKU Edit Modal -->
   <div class="sku-modal-overlay" id="sku-modal">
@@ -1614,13 +1616,12 @@ window.goToSKU = function() {
   document.getElementById('view-detail').style.display = 'none';
   document.getElementById('nav-hub').style.display = 'flex';
   document.getElementById('nav-detail').style.display = 'none';
-  /* Position sku view inside app */
-  var skuView = document.getElementById('view-sku');
-  skuView.style.display = 'block';
-  /* Highlight nav item */
+  document.getElementById('view-sku').style.display = 'block';
   document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.remove('active'); });
   var btn = document.getElementById('nav-sku-btn');
   if (btn) btn.classList.add('active');
+  appState.view = 'sku';
+  applySidebarState();
   loadSKUs();
 };
 
@@ -1629,6 +1630,7 @@ var _origGoBack = window.goBackToHub;
 window.goBackToHub = function() {
   document.getElementById('view-sku').style.display = 'none';
   document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.remove('active'); });
+  appState.view = 'hub';
   _origGoBack();
 };
 
