@@ -829,7 +829,7 @@ body {
 .wf-mc-bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; z-index: 1; position: relative; width: 42px; }
 .wf-mc-bar-wrapper { position: relative; width: 100%; display: flex; align-items: flex-end; justify-content: center; transition: height 0.8s var(--ease-bounce); }
 .wf-mc-bar-value { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: var(--text-main); white-space: nowrap; z-index: 2; }
-.wf-bar { width: 100%; height: 100%; border-radius: 8px 8px 0 0; cursor: pointer; transition: filter .25s; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3); }
+.wf-bar { width: 100%; height: 100%; border-radius: 99px 99px 0 0; cursor: pointer; transition: filter .25s; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3); }
 .wf-bar:hover { filter: brightness(0.88); }
 .wf-bar.ly { background: linear-gradient(180deg, #93c5fd, #3b82f6); opacity: 0.85; }
 .wf-bar.ty { background: linear-gradient(180deg, #6ee7b7, #059669); }
@@ -1223,7 +1223,7 @@ body { overflow-y: auto; }
       <button onclick="window.print()" class="nav-item"><i class="fas fa-print"></i> <span class="nav-label">列印 A3 報表</span></button>
       <div class="divider"></div>
       <button onclick="window.toggleTheme()" class="nav-item theme-toggle-btn"><i class="fas fa-moon"></i> <span class="nav-label">切換深色模式</span></button>
-      <button onclick="window.deleteCurrentProject()" class="nav-item danger" style="margin-top:auto"><i class="fas fa-trash-alt"></i> <span class="nav-label">刪除此專案</span></button>
+
     </nav>
 
     <div class="sidebar-user no-print">
@@ -2431,7 +2431,7 @@ window.updateCharts = function() {
   var hasQ=sQ.length>0&&sQ[0][1].qty>0;
 
   Chart.defaults.color=cc.text;
-  var bCfg={barPercentage:.9,categoryPercentage:.45,borderRadius:8,borderSkipped:'bottom',maxBarThickness:32};
+  var bCfg={barPercentage:.9,categoryPercentage:.45,borderRadius:99,borderSkipped:'bottom',maxBarThickness:32};
   var bOpts={responsive:true,maintainAspectRatio:false,layout:{padding:{top:10}},scales:{x:{grid:{color:cc.grid},ticks:{color:cc.text}},y:{grace:'30%',grid:{color:cc.grid},ticks:{color:cc.text,maxTicksLimit:6}}},plugins:{legend:{position:'top',labels:{color:cc.text,usePointStyle:true,padding:15}}}};
 
   var makeGrad=(ctx,c1,c2)=>{var g=ctx.createLinearGradient(0,400,0,0);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
