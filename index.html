@@ -206,12 +206,12 @@ body {
 
 /* ── Hover lift ── */
 .hover-lift {
-  transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring);
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-spring);
   will-change: transform, box-shadow;
 }
 .hover-lift:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 16px 36px rgba(37,99,235,0.13);
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 8px 20px rgba(37,99,235,0.10);
 }
 [data-theme="dark"] .hover-lift:hover {
   box-shadow: 0 16px 36px rgba(0,0,20,0.45);
@@ -237,20 +237,35 @@ body {
   flex-direction: column;
   gap: 0;
   box-shadow: 2px 0 20px rgba(37,99,235,0.06);
-  transition: transform .3s cubic-bezier(0.16,1,0.3,1), background .3s;
+  transition: transform .28s cubic-bezier(0.16,1,0.3,1), background .3s;
   overflow: hidden;
 }
+/* Fully hidden off-screen — toggle tab peeks out */
 .sidebar.collapsed {
-  transform: translateX(calc(-1 * var(--sidebar-w) + 52px));
+  transform: translateX(calc(-1 * var(--sidebar-w)));
 }
-.sidebar.collapsed .brand-text,
-.sidebar.collapsed .side-title,
-.sidebar.collapsed .divider,
-.sidebar.collapsed .user-info {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .15s ease;
+/* Toggle tab that stays visible when sidebar is collapsed */
+.sidebar-tab {
+  position: fixed;
+  top: 50%; left: 0;
+  transform: translateY(-50%);
+  width: 20px; height: 56px;
+  background: var(--bg-sidebar);
+  backdrop-filter: var(--blur);
+  border: 0.5px solid var(--border);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 99;
+  transition: width .2s, opacity .28s;
+  box-shadow: 2px 0 8px rgba(37,99,235,0.08);
+  opacity: 0; pointer-events: none;
 }
+.sidebar.collapsed ~ .sidebar-tab,
+.sidebar-tab.show {
+  opacity: 1; pointer-events: all;
+}
+.sidebar-tab i { font-size: 10px; color: var(--primary); }
 .sidebar-user { overflow: hidden; }
 
 .brand {
@@ -410,12 +425,12 @@ body {
   cursor: pointer;
   display: flex; flex-direction: column; gap: 12px;
   min-height: 190px; position: relative;
-  transition: border-color .2s, transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring);
+  transition: border-color .15s, transform 0.18s var(--ease-spring), box-shadow 0.18s var(--ease-spring);
 }
 .project-card-hub:hover {
   border-color: var(--primary);
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 16px 36px rgba(37,99,235,0.13);
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 8px 20px rgba(37,99,235,0.10);
 }
 .hub-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
 .hub-card-title { font-size: 17px; font-weight: 800; color: var(--text-main); margin: 5px 0 0; }
@@ -707,11 +722,11 @@ body {
   border: 0.5px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px; display: flex; flex-direction: column;
-  transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring);
+  transition: transform 0.18s var(--ease-spring), box-shadow 0.18s var(--ease-spring);
 }
 .side-kpi-card:hover {
-  transform: translateY(-4px) scale(1.03);
-  box-shadow: 0 10px 24px rgba(37,99,235,0.10);
+  transform: translateY(-2px) scale(1.015);
+  box-shadow: 0 6px 14px rgba(37,99,235,0.08);
 }
 .side-kpi-header {
   font-size: 13px; font-weight: 700; color: var(--text-main);
@@ -749,42 +764,12 @@ body {
 .trend-text-down { color: var(--down) !important; }
 
 /* Apple Rings */
-.apple-ring-wrapper {
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: #18181b;
-  box-shadow: inset 0 3px 8px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.05);
-  position: relative; margin: 0 auto;
-}
-/* Canvas ring — drawn via JS, dot technique from codepen */
-.ring-canvas-wrap {
-  position: relative; width: 110px; height: 110px;
-  border-radius: 50%; background: #18181b;
-  box-shadow: inset 0 3px 8px rgba(0,0,0,0.5);
-  margin: 0 auto;
-}
-.ring-canvas-wrap canvas { position: absolute; top: 0; left: 0; }
-.ring-dot-cap {
-  position: absolute; width: 100%; height: 100%;
-  border-radius: 50%;
-  transition: transform 0.8s cubic-bezier(0.34,1.56,0.64,1);
-  transform-origin: center center;
-}
-.ring-dot-cap::after {
-  content: '';
-  position: absolute;
-  left: 50%; top: -5.5px;
-  width: 11px; height: 11px;
-  margin-left: -5.5px;
-  border-radius: 50%;
-  box-shadow: 2px 0 4px rgba(0,0,0,0.6);
-}
+/* ring styles moved to sk-gauge-wrap */
 .ring-text-content {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
-.sk-circle-val { font-size: 22px; font-weight: 900; color: #fff; line-height: 1; margin-bottom: 2px; }
-.sk-circle-lbl { font-size: 10px; color: #94a3b8; font-weight: 600; }
+.sk-circle-lbl { font-size: 10px; color: var(--text-muted); font-weight: 600; }
 
 /* ═══════════════════════════════════════════
    EXECUTIVE SUMMARY
@@ -1002,15 +987,21 @@ body { overflow-y: auto; }
 /* Small section gauge */
 .sk-gauge-wrap {
   position: relative;
-  width: 110px; height: 70px;
+  width: 110px; height: 74px;
   margin: 0 auto;
 }
 .sk-gauge-wrap canvas { display: block; }
 .sk-gauge-text {
   position: absolute;
-  bottom: 0; left: 0; right: 0;
+  bottom: 2px; left: 0; right: 0;
   display: flex; flex-direction: column; align-items: center;
-  gap: 1px;
+  gap: 0;
+}
+.sk-circle-val {
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  color: var(--text-main) !important;
+  line-height: 1 !important;
 }
 </style>
 </head>
@@ -1140,6 +1131,10 @@ body { overflow-y: auto; }
       </div>
     </div>
   </aside>
+  <!-- Sidebar pull tab (visible when sidebar collapsed) -->
+  <div class="sidebar-tab" id="sidebar-tab" onclick="window.toggleSidebar()">
+    <i class="fas fa-chevron-right"></i>
+  </div>
 
   <main class="main-content">
     <!-- Hub View -->
@@ -1571,6 +1566,20 @@ window.duplicateProject = function(id) {
   projects.unshift(np); saveProjects(); renderHub();
 };
 
+window.deleteProjectById = function(pid) {
+  var proj = projects.find(function(p){ return p.id === pid; });
+  var name = proj ? proj.title : '此專案';
+  if (!window.confirm('確定要刪除「' + name + '」？')) return;
+  if (!window.confirm('再次確認：永久刪除「' + name + '」，此操作不可逆！')) return;
+  projects = projects.filter(function(p){ return p.id !== pid; });
+  localStorage.setItem('yuxitang_projects_v49', JSON.stringify(projects));
+  if (currentUser) {
+    sb.from('projects').delete().eq('id', pid).eq('user_id', currentUser.id).then(function(){});
+  }
+  showToast('「' + name + '」已刪除', 'error');
+  window.renderHub();
+};
+
 window.deleteCurrentProject = function() {
   var pid = appState.currentProjectId;
   if (!pid) { showToast('找不到專案 ID', 'error'); return; }
@@ -1667,7 +1676,10 @@ window.renderHub = function() {
 
       grid.innerHTML += `
         <div class="project-card-hub" onclick="window.openProject('${proj.id}')">
-          <button class="btn-duplicate" title="複製" onclick="event.stopPropagation();window.duplicateProject('${proj.id}')"><i class="fas fa-copy"></i></button>
+          <div style="position:absolute;top:14px;right:14px;display:flex;gap:6px">
+            <button class="btn-duplicate" title="複製" onclick="event.stopPropagation();window.duplicateProject('${proj.id}')"><i class="fas fa-copy"></i></button>
+            <button class="btn-duplicate" title="刪除" style="color:var(--up)" onclick="event.stopPropagation();window.deleteProjectById('${proj.id}')"><i class="fas fa-trash-alt"></i></button>
+          </div>
           <div class="hub-card-header">
             <div><span class="badge-id">${proj.shortId}</span><h3 class="hub-card-title">${proj.title}</h3></div>
             <span class="hub-card-years">${proj.ly} → ${proj.ty}</span>
@@ -1917,7 +1929,10 @@ function updateSectionDOM(sIdx, k) {
 /* ── Section KPI Gauge — semicircle style ── */
 function updateRing(sIdx, type, pct) {
   var valEl = document.getElementById('ring-'+type+'-val-'+sIdx);
-  if (valEl) valEl.innerText = pct + '%';
+  if (valEl) {
+    valEl.innerText = pct + '%';
+    valEl.style.color = pct > 100 ? '#f59e0b' : (type === 'rev' ? '#047857' : '#b45309');
+  }
 
   var canvas = document.getElementById('ring-canvas-'+type+'-'+sIdx);
   if (!canvas) return;
@@ -2381,15 +2396,17 @@ window.toggleSidebar = function() {
 function applySidebarState() {
   var sidebar = document.querySelector('.sidebar');
   var icon    = document.getElementById('sidebar-toggle-icon');
+  var tab     = document.getElementById('sidebar-tab');
   var main    = document.querySelector('.main-content');
   if (sidebarCollapsed) {
     sidebar.classList.add('collapsed');
     if (icon) icon.style.transform = 'rotate(180deg)';
-    /* 52px = visible strip when collapsed */
-    if (main) main.style.paddingLeft = 'calc(52px + 36px)';
+    if (tab)  tab.classList.add('show');
+    if (main) main.style.paddingLeft = '36px';
   } else {
     sidebar.classList.remove('collapsed');
     if (icon) icon.style.transform = 'rotate(0deg)';
+    if (tab)  tab.classList.remove('show');
     if (main) main.style.paddingLeft = 'calc(268px + 36px)';
   }
 }
