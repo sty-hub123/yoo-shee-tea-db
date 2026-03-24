@@ -1738,54 +1738,85 @@ function initSlideDelete() {
   var thumb = document.getElementById('slide-thumb');
   var fill  = document.getElementById('slide-fill');
   var label = document.getElementById('slide-label');
-  var trackW = track.offsetWidth;
-  var thumbW = thumb.offsetWidth;
-  var maxX   = trackW - thumbW - 8;
+  if (!track || !thumb) return;
+
+  /* Reset state */
+  thumb.innerHTML = '<i class="fas fa-chevron-right"></i>';
+  thumb.style.background = 'var(--up)';
+  thumb.style.left = '4px';
+  fill.style.width = '0%';
+  label.style.opacity = '1';
+
   var dragging = false;
-  var startX = 0, startLeft = 4;
+  var startClientX = 0;
+  var startThumbLeft = 4;
+  var completed = false;
+
+  function getClientX(e) {
+    return e.touches ? e.touches[0].clientX : e.clientX;
+  }
 
   function onStart(e) {
+    if (completed) return;
     dragging = true;
-    startX = (e.touches ? e.touches[0].clientX : e.clientX);
-    startLeft = parseInt(thumb.style.left) || 4;
+    startClientX = getClientX(e);
+    startThumbLeft = parseInt(thumb.style.left) || 4;
     e.preventDefault();
+    e.stopPropagation();
   }
+
   function onMove(e) {
-    if (!dragging) return;
-    var x = (e.touches ? e.touches[0].clientX : e.clientX);
-    var dx = x - startX;
-    var newLeft = Math.max(4, Math.min(maxX, startLeft + dx));
+    if (!dragging || completed) return;
+    var trackW = track.getBoundingClientRect().width;
+    var thumbW = thumb.getBoundingClientRect().width;
+    var maxLeft = trackW - thumbW - 4;
+    var dx = getClientX(e) - startClientX;
+    var newLeft = Math.max(4, Math.min(maxLeft, startThumbLeft + dx));
+    var pct = ((newLeft - 4) / (maxLeft - 4)) * 100;
+
     thumb.style.left = newLeft + 'px';
-    var pct = ((newLeft - 4) / (maxX - 4)) * 100;
     fill.style.width = pct + '%';
-    label.style.opacity = Math.max(0, 1 - pct/40);
-    if (pct >= 98) {
+    label.style.opacity = Math.max(0, 1 - pct / 50);
+
+    if (pct >= 97) {
+      completed = true;
       dragging = false;
       thumb.innerHTML = '<i class="fas fa-check"></i>';
       thumb.style.background = '#059669';
+      thumb.style.left = (maxLeft) + 'px';
+      fill.style.width = '100%';
+      label.style.opacity = '0';
       setTimeout(function() {
         if (_deletePid) execDeleteProject(_deletePid);
-      }, 300);
+      }, 350);
     }
+    e.preventDefault();
   }
-  function onEnd() { 
+
+  function onEnd() {
     if (!dragging) return;
     dragging = false;
-    var pct = parseFloat(fill.style.width) || 0;
-    if (pct < 98) {
+    if (!completed) {
+      /* Snap back */
+      thumb.style.transition = 'left .25s ease';
+      fill.style.transition = 'width .25s ease';
+      label.style.transition = 'opacity .25s ease';
       thumb.style.left = '4px';
       fill.style.width = '0%';
       label.style.opacity = '1';
+      setTimeout(function() {
+        thumb.style.transition = '';
+        fill.style.transition = '';
+        label.style.transition = '';
+      }, 260);
     }
   }
-  /* Remove old listeners by cloning */
-  var newThumb = thumb.cloneNode(true);
-  thumb.parentNode.replaceChild(newThumb, thumb);
-  newThumb.addEventListener('mousedown', onStart);
-  newThumb.addEventListener('touchstart', onStart, {passive:false});
+
+  thumb.addEventListener('mousedown', onStart);
+  thumb.addEventListener('touchstart', onStart, {passive: false});
   document.addEventListener('mousemove', onMove);
   document.addEventListener('mouseup', onEnd);
-  document.addEventListener('touchmove', onMove, {passive:false});
+  document.addEventListener('touchmove', onMove, {passive: false});
   document.addEventListener('touchend', onEnd);
 }
 
