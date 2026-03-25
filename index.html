@@ -1550,6 +1550,8 @@ body { overflow-y: auto; }
     </div>
 
     <nav class="nav-menu" id="nav-hub" style="display:flex">
+      <button onclick="window.goBackToHub()" class="nav-item" id="nav-home-btn"><i class="fas fa-house"></i> <span class="nav-label">歷年檔期總覽</span></button>
+      <div class="divider"></div>
       <span class="side-title">系統管理</span>
       <button onclick="window.openTagManager()" class="nav-item"><i class="fas fa-tags"></i> <span class="nav-label">全域標籤管理</span></button>
       <button onclick="window.exportAllData()" class="nav-item"><i class="fas fa-file-export"></i> <span class="nav-label">匯出備份檔</span></button>
@@ -2193,8 +2195,12 @@ window.goToSKU = function() {
 var _origGoBack = window.goBackToHub;
 window.goBackToHub = function() {
   document.getElementById('view-sku').style.display = 'none';
+  document.getElementById('view-link').style.display = 'none';
   document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.remove('active'); });
+  var homeBtn = document.getElementById('nav-home-btn');
+  if (homeBtn) homeBtn.classList.add('active');
   appState.view = 'hub';
+  applySidebarState();
   _origGoBack();
 };
 
@@ -3785,17 +3791,21 @@ function applySidebarState() {
   var sidebar = document.querySelector('.sidebar');
   var icon    = document.getElementById('sidebar-toggle-icon');
   var tab     = document.getElementById('sidebar-tab');
-  var main    = document.querySelector('.main-content');
+  var mains   = document.querySelectorAll('.main-content');
   if (sidebarCollapsed) {
     sidebar.classList.add('collapsed');
     if (icon) icon.style.transform = 'rotate(180deg)';
     if (tab)  tab.classList.add('show');
-    if (main) main.style.paddingLeft = '36px';
+    mains.forEach(function(m) {
+      m.style.paddingLeft = 'calc(52px + clamp(16px, 3vw, 36px))';
+    });
   } else {
     sidebar.classList.remove('collapsed');
     if (icon) icon.style.transform = 'rotate(0deg)';
     if (tab)  tab.classList.remove('show');
-    if (main) main.style.paddingLeft = 'calc(268px + clamp(16px, 3vw, 36px))';
+    mains.forEach(function(m) {
+      m.style.paddingLeft = 'calc(268px + clamp(16px, 3vw, 36px))';
+    });
   }
 }
 /* Apply on load */
