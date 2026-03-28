@@ -115,9 +115,6 @@
         <input type="file" id="import-file" style="display:none" onchange="window.importData(event)" accept=".json">
       </label>
       <div class="divider"></div>
-      <div class="divider"></div>
-      <button onclick="window.goToSKU()" class="nav-item" id="nav-sku-btn"><i class="fas fa-database"></i> <span class="nav-label">SKU 主數據庫</span></button>
-      <div class="divider"></div>
       <button onclick="window.toggleTheme()" class="nav-item theme-toggle-btn"><i class="fas fa-moon"></i> <span class="nav-label">切換深色模式</span></button>
       <button onclick="window.clearAllData()" class="nav-item danger" style="margin-top:auto"><i class="fas fa-trash-alt"></i> 清空系統資料</button>
     </nav>
@@ -228,51 +225,6 @@
     </div>
 
   <!-- ══════════════════════════════════════
-       SKU 主數據庫 VIEW
-  ══════════════════════════════════════ -->
-  <div id="view-sku" style="display:none">
-    <header class="top-bar">
-      <div class="page-title">
-        <h2><i class="fas fa-database" style="color:var(--primary);font-size:18px"></i> SKU 主數據庫</h2>
-        <p>所有商品的基本資料，跨年共用，一次建立永久有效</p>
-      </div>
-      <div class="header-actions no-print" style="display:flex;gap:10px;align-items:center">
-        <div class="search-box" style="max-width:260px">
-          <i class="fas fa-search"></i>
-          <input type="text" id="sku-search" placeholder="搜尋編號或名稱…" oninput="window.renderSKUTable()">
-        </div>
-        <button class="btn-primary" onclick="window.openSKUModal()">
-          <i class="fas fa-plus"></i> 新增商品
-        </button>
-      </div>
-    </header>
-
-    <div class="cat-filters no-print" id="sku-cat-filters" style="margin-bottom:18px"></div>
-
-    <div class="sku-table-wrap">
-      <table class="sku-table">
-        <thead>
-          <tr>
-            <th>商品編號</th>
-            <th>商品名稱</th>
-            <th>售價</th>
-            <th>類別</th>
-            <th>狀態</th>
-            <th>描述</th>
-            <th>檔期標籤</th>
-            <th style="width:80px;text-align:center">操作</th>
-          </tr>
-        </thead>
-        <tbody id="sku-tbody"></tbody>
-      </table>
-      <div id="sku-empty" class="sku-empty" style="display:none">
-        <i class="fas fa-box-open"></i>
-        <p>尚無商品資料，點右上角「新增商品」開始建立</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
        Sprint 2: 跨年商品連線 VIEW
   ══════════════════════════════════════ -->
   <div id="view-link" style="display:none">
@@ -334,63 +286,6 @@
     </div>
   </div>
 
-  <!-- SKU Edit Modal -->
-  <div class="sku-modal-overlay" id="sku-modal">
-    <div class="sku-modal">
-      <div class="sku-modal-header">
-        <h3 id="sku-modal-title"><i class="fas fa-plus"></i> 新增商品</h3>
-        <button class="btn-icon" onclick="window.closeSKUModal()"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="sku-modal-body">
-        <div class="sku-form-row">
-          <div class="sku-form-group">
-            <label class="sku-form-label">商品編號 *</label>
-            <input class="sku-form-input" id="sku-f-code" placeholder="例：YST-1290" maxlength="30">
-          </div>
-          <div class="sku-form-group">
-            <label class="sku-form-label">售價 (TWD) *</label>
-            <input class="sku-form-input" id="sku-f-price" type="number" placeholder="例：1290" min="0">
-          </div>
-        </div>
-        <div class="sku-form-group">
-          <label class="sku-form-label">商品名稱 *</label>
-          <input class="sku-form-input" id="sku-f-name" placeholder="例：冠璽御禮盒">
-        </div>
-        <div class="sku-form-row">
-          <div class="sku-form-group">
-            <label class="sku-form-label">產品類別</label>
-            <input class="sku-form-input" id="sku-f-cat" placeholder="例：茶禮盒" list="sku-cat-list">
-            <datalist id="sku-cat-list"></datalist>
-          </div>
-          <div class="sku-form-group">
-            <label class="sku-form-label">狀態</label>
-            <select class="sku-form-select" id="sku-f-status">
-              <option value="active">在售中</option>
-              <option value="discontinued">已停售</option>
-            </select>
-          </div>
-        </div>
-        <div class="sku-form-group">
-          <label class="sku-form-label">描述（選填）</label>
-          <input class="sku-form-input" id="sku-f-desc" placeholder="簡短描述商品特色…">
-        </div>
-        <div class="sku-form-group" style="position:relative">
-          <label class="sku-form-label">適用檔期標籤（選填）</label>
-          <div class="tag-input-wrap" id="sku-tag-wrap" onclick="document.getElementById('sku-tag-bare').focus()">
-            <span id="sku-tags-display"></span>
-            <input class="tag-bare-input" id="sku-tag-bare" placeholder="輸入標籤後按 Enter，例：春節、常態">
-          </div>
-          <div class="tag-suggestions" id="tag-suggestions" style="display:none"></div>
-          <div style="font-size:11px;color:var(--text-subtle);margin-top:4px">按 Enter 新增，常用：春節、端午、中秋、母親節、常態</div>
-        </div>
-      </div>
-      <div class="sku-modal-footer">
-        <button class="btn-secondary" onclick="window.closeSKUModal()">取消</button>
-        <button class="btn-primary" onclick="window.saveSKU()"><i class="fas fa-check"></i> 儲存</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Tag Manager Modal -->
   <div id="modal-tag-manager" class="modal-overlay" style="display:none">
     <div class="modal-content">
@@ -418,7 +313,6 @@
   <!-- App Modules -->
   <script src="js/config.js"></script>
   <script src="js/link.js"></script>
-  <script src="js/sku.js"></script>
   <script src="js/login.js"></script>
   <script src="js/app.js"></script>
   <script src="js/boot.js"></script>
